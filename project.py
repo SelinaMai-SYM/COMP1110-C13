@@ -30,11 +30,12 @@ def add_event(time, gid, event_type):
         eventlist[time] = [(gid, event_type)]
     else:
         eventlist[time].append((gid, event_type))
+    print("This event is added!")
 
 #Define function file_input to read input from file
 def file_input():
     try:
-        with open("input.txt", "r") as f:
+        with open("input.txt", "r") as file:
             #Read the first line to get the number of tables and their capacities
             line = file.readline()
             while line and line.strip() == '':
@@ -42,24 +43,24 @@ def file_input():
             if not line:
                 print("Input file is empty.")
                 if_error = True
-                system.exit()
+                sys.exit()
             try:
                 n = int(line.strip())
             except ValueError:
                 print("Invalid number of tables.")
-                system.exit()
+                sys.exit()
             for i in range(n):
                 line = file.readline()
                 while line and line.strip() == '':
                     line = file.readline()
                 if not line:
                     print("Not enough table information in input file.")
-                    system.exit()
+                    sys.exit()
                 try:
                     table_cap, table_num = map(int, line.strip().split())
                 except ValueError:
                     print("Invalid table information.")
-                    system.exit()
+                    sys.exit()
                 for j in range(table_num):
                     tab.append([table_cap, True])
             
@@ -69,26 +70,28 @@ def file_input():
                 line = file.readline()
             if not line:
                 print("Not enough customer information in input file.")
-                system.exit()
+                sys.exit()
             try:
                 m = int(line.strip())
             except ValueError:
                 print("Invalid number of customers.")
-                system.exit()
+                sys.exit()
             for i in range(m):
                 line = file.readline()
                 while line and line.strip() == '':
                     line = file.readline()
                 if not line:
                     print("Not enough customer information in input file.")
-                    system.exit()
+                    sys.exit()
                 try:
                     arrival_time, group_size, dining_duration = map(int, line.strip().split())
                 except ValueError:
                     print("Invalid customer information.")
-                    system.exit()
+                    sys.exit()
                 cus.append([arrival_time, group_size, dining_duration])
                 add_event(arrival_time, i, True)
     except FileNotFoundError:
         print("Input file not found.")
-        system.exit()
+        sys.exit()
+
+file_input()
