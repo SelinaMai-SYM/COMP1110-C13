@@ -1,0 +1,105 @@
+{
+  "restaurant_name": "Canberra Garden Grill - Fine Queue Buckets",
+  "simulation_start": "11:30",
+  "simulation_end": "22:00",
+  "queue_mode": "size_based",
+  "queue_definitions": [
+    {
+      "queue_id": "Q1",
+      "min_size": 1,
+      "max_size": 1
+    },
+    {
+      "queue_id": "Q2",
+      "min_size": 2,
+      "max_size": 2
+    },
+    {
+      "queue_id": "Q3",
+      "min_size": 3,
+      "max_size": 4
+    },
+    {
+      "queue_id": "Q4",
+      "min_size": 5,
+      "max_size": 6
+    },
+    {
+      "queue_id": "Q5",
+      "min_size": 7,
+      "max_size": 20
+    }
+  ],
+  "tables": [
+    {
+      "table_id": "T01",
+      "capacity": 2,
+      "zone": "Window"
+    },
+    {
+      "table_id": "T02",
+      "capacity": 2,
+      "zone": "Window"
+    },
+    {
+      "table_id": "T03",
+      "capacity": 2,
+      "zone": "Patio"
+    },
+    {
+      "table_id": "T04",
+      "capacity": 2,
+      "zone": "Patio"
+    },
+    {
+      "table_id": "T05",
+      "capacity": 4,
+      "zone": "Main"
+    },
+    {
+      "table_id": "T06",
+      "capacity": 4,
+      "zone": "Main"
+    },
+    {
+      "table_id": "T07",
+      "capacity": 4,
+      "zone": "Main"
+    },
+    {
+      "table_id": "T08",
+      "capacity": 4,
+      "zone": "Patio"
+    },
+    {
+      "table_id": "T09",
+      "capacity": 6,
+      "zone": "Garden"
+    },
+    {
+      "table_id": "T10",
+      "capacity": 6,
+      "zone": "Garden"
+    },
+    {
+      "table_id": "T11",
+      "capacity": 8,
+      "zone": "Garden"
+    }
+  ],
+  "table_sharing_allowed": false,
+  "table_combining_allowed": false,
+  "reservation_hold_policy": {
+    "enabled": true,
+    "hold_minutes": 10
+  },
+  "default_reset_policy": {
+    "enabled": true,
+    "default_reset_minutes": 4
+  },
+  "optional_operational_defaults": {
+    "max_seating_actions_per_event_time": 2,
+    "max_cleaning_actions_per_event_time": 2,
+    "notes": "Finer segmentation improves matching resolution but increases operational complexity."
+  }
+}

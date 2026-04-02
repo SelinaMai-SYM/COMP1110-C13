@@ -1,0 +1,3 @@
+scenario_name,average_wait_time,max_wait_time,p90_wait_time,max_queue_length,groups_served,groups_abandoned,service_level_within_15_min,service_level_within_30_min,table_utilization_overall,reservation_fulfillment_rate,average_reservation_delay,average_table_fit_efficiency,notes
+pair_01_table_mix_A,16.4,41.0,29.0,8,14,0,0.679,0.929,0.792,0.960,5.2,0.903,"Illustrative output: smaller tables improve fit for pairs but delay some larger parties."
+pair_01_table_mix_B,13.7,34.0,25.0,6,15,0,0.748,0.953,0.808,0.972,3.9,0.829,"Illustrative output: larger tables seat big parties more flexibly but waste more capacity on small groups."

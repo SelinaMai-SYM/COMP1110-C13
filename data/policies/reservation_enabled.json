@@ -1,0 +1,13 @@
+{
+  "policy_category": "reservation_control",
+  "policy_name": "Reservations Enabled",
+  "reservation_system_enabled": true,
+  "hold_tables_for_reservations": true,
+  "default_hold_minutes": 10,
+  "reservation_priority_available": true,
+  "late_reservation_behavior": "downgrade_to_walkin_after_grace",
+  "no_show_handling": {
+    "track_no_show": true,
+    "release_table_after_grace": true
+  }
+}

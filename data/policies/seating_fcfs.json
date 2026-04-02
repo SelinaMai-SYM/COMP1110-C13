@@ -1,0 +1,13 @@
+{
+  "policy_category": "seating",
+  "policy_name": "FCFS Earliest Suitable",
+  "queue_rule": "fcfs_within_queue",
+  "selection_rule": "earliest_suitable",
+  "reservation_priority": false,
+  "best_fit": false,
+  "late_reservation_behavior": "downgrade_to_walkin_after_grace",
+  "no_show_handling": {
+    "release_hold_after_grace": true,
+    "record_no_show": true
+  }
+}

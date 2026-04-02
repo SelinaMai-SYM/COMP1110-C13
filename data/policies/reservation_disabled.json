@@ -1,0 +1,13 @@
+{
+  "policy_category": "reservation_control",
+  "policy_name": "Reservations Disabled",
+  "reservation_system_enabled": false,
+  "hold_tables_for_reservations": false,
+  "default_hold_minutes": 0,
+  "reservation_priority_available": false,
+  "late_reservation_behavior": "not_applicable",
+  "no_show_handling": {
+    "track_no_show": false,
+    "release_table_immediately": true
+  }
+}

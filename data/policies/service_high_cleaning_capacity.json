@@ -1,0 +1,16 @@
+{
+  "policy_category": "service",
+  "policy_name": "High Cleaning Capacity",
+  "reset_enabled": true,
+  "reset_time_by_capacity": {
+    "2": 3,
+    "4": 4,
+    "6": 5,
+    "8": 6
+  },
+  "max_seating_actions_per_event_time": 3,
+  "max_cleaning_actions_per_event_time": 3,
+  "kitchen_load_mode": "light_peak",
+  "dining_duration_multiplier_under_load": 1.02,
+  "abandonment_enabled": false
+}
