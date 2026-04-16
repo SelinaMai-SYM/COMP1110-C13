@@ -30,8 +30,13 @@ Open `http://127.0.0.1:4173`.
 
 The Render service definition lives at `web/render.yaml` and defines:
 
-1. `restaurant-simulation-api` as the Python web service.
-2. `restaurant-simulation-dashboard` as the static React site.
+1. `COMP-1110-C08` as the Python web service.
+2. `comp-1110-c08-dashboard` as the static React site.
+
+Current stable public URLs:
+
+- Backend API: `https://comp-1110-c08.onrender.com`
+- Frontend dashboard: `https://comp-1110-c08-dashboard.onrender.com`
 
 You can deploy with either:
 
@@ -41,16 +46,17 @@ You can deploy with either:
 Suggested steps:
 
 1. Push the repository to GitHub.
-2. Deploy the backend service from `code/`.
-3. Wait for Render to assign the real backend URL.
-4. Set the frontend static site's `VITE_API_BASE_URL` environment variable to that real backend URL.
-5. Deploy or redeploy the frontend service from `web/`.
+2. Create or sync the Render services from `web/render.yaml`.
+3. Keep the service names unchanged so the `.onrender.com` URLs stay stable.
+4. Redeploy the backend service from `code/` and the frontend static site from `web/` whenever you ship updates.
 
 After that, anyone with the frontend URL can open the dashboard and use both the official case studies and the guided custom scenario builder.
 
 ## Notes
 
 - CORS is enabled in the FastAPI app to support separate frontend hosting.
+- `VITE_API_BASE_URL` is already pinned in `web/render.yaml`, so production redeploys do not rely on manually typing the API URL into the Render dashboard.
+- If you rename or delete either Render service, Render can assign a different public subdomain. Keep the current service names if you want the URLs above to remain your fixed entry points.
 - The main custom workflow is guided by preset selectors sourced from `data/restaurant_configs/`, `data/policies/`, and `data/arrival_scenarios/`.
 - Raw JSON and CSV are still available in an advanced preview section for transparency and debugging, but they are no longer the primary user flow.
 - `code/outputs/case_study_metrics.csv` and `code/outputs/case_study_comparisons.json` can be used directly in the final report.
