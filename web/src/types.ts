@@ -85,6 +85,22 @@ export interface CaseStudyMetadata {
   summary: string
   versions: string[]
   path: string
+  focus_label: string
+  starter_versions: Partial<Record<'A' | 'B', CaseStudyStarterVersion>>
+}
+
+export interface CaseStudyStarterVersion {
+  label: string
+  restaurant_layout_id: string
+  queue_structure_id: string
+  reservation_policy_id: string
+  seating_policy_id: string
+  service_policy_id: string
+  arrival_scenario_id: string
+  hold_minutes: number
+  abandonment_enabled: boolean
+  restaurant_name?: string | null
+  notes?: string
 }
 
 export interface SchemasResponse {

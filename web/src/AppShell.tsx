@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  Area,
-  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
@@ -12,63 +10,62 @@ import {
   YAxis,
 } from 'recharts'
 import {
-  API_BASE_URL,
   fetchBuilderPresets,
   fetchCaseStudies,
-  fetchSchemas,
   runCaseStudyComparison,
   runCustomScenario,
 } from './api'
 import {
+  buildCaseStudyOverviewRows,
+  buildCustomComparisonRows,
   buildCustomScenarioPayload,
   buildFormFromStarter,
   summarizeBuilderSelections,
 } from './builder'
+import type { CaseStudyOverviewRow } from './builder'
 import type {
   BuilderFormState,
   BuilderPresetsResponse,
   CaseStudyMetadata,
-  GroupOutcome,
   MetricsRecord,
   PairComparison,
   ScenarioResult,
 } from './types'
 
 type Mode = 'official' | 'custom'
+type BuilderSide = 'A' | 'B'
+type BuilderPairState = Record<BuilderSide, BuilderFormState>
 type NumericMetricKey = Exclude<keyof MetricsRecord, 'scenario_name' | 'notes'>
 type SignalTone = 'positive' | 'negative' | 'neutral'
 
-const PRODUCTION_FRONTEND_URL = 'https://comp-1110-c08-dashboard.onrender.com'
-const PRODUCTION_BACKEND_URL = 'https://comp-1110-c08.onrender.com'
-
 const metricLabels: Record<NumericMetricKey, string> = {
-  average_wait_time: 'Average Wait',
-  max_wait_time: 'Max Wait',
-  p90_wait_time: 'P90 Wait',
-  max_queue_length: 'Max Queue',
-  groups_served: 'Groups Served',
-  groups_abandoned: 'Groups Abandoned',
-  service_level_within_15_min: 'Service <= 15 min',
-  service_level_within_30_min: 'Service <= 30 min',
-  table_utilization_overall: 'Table Utilization',
-  reservation_fulfillment_rate: 'Reservation Fulfillment',
-  average_reservation_delay: 'Avg Reservation Delay',
-  average_table_fit_efficiency: 'Avg Table Fit',
+  average_wait_time: 'Average wait for a table',
+  max_wait_time: 'Longest wait any party faced',
+  p90_wait_time: 'Wait time most parties stayed under',
+  max_queue_length: 'Longest queue',
+  groups_served: 'Parties seated',
+  groups_abandoned: 'Parties who left the line',
+  service_level_within_15_min: 'Seated within 15 minutes',
+  service_level_within_30_min: 'Seated within 30 minutes',
+  table_utilization_overall: 'Dining room use',
+  reservation_fulfillment_rate: 'Bookings successfully seated',
+  average_reservation_delay: 'Average delay for booked parties',
+  average_table_fit_efficiency: 'Seat fit',
 }
 
 const metricCaptions: Partial<Record<NumericMetricKey, string>> = {
-  average_wait_time: 'Minutes per group on average.',
-  max_wait_time: 'Worst observed wait in the run.',
-  p90_wait_time: 'Peak wait pressure at the 90th percentile.',
-  max_queue_length: 'Largest queue depth observed.',
-  groups_served: 'Completed dining parties.',
-  groups_abandoned: 'Demand lost before seating.',
-  service_level_within_15_min: 'Share seated within 15 minutes.',
-  service_level_within_30_min: 'Share seated within 30 minutes.',
-  table_utilization_overall: 'Fraction of occupied table time.',
-  reservation_fulfillment_rate: 'Reservations seated successfully.',
-  average_reservation_delay: 'Delay against reservation time.',
-  average_table_fit_efficiency: 'How tightly party sizes fit tables.',
+  average_wait_time: 'The typical time a party waits before being seated.',
+  max_wait_time: 'The single worst wait anyone experienced that night.',
+  p90_wait_time: 'Most parties were seated within this amount of time.',
+  max_queue_length: 'The busiest point of the waitlist.',
+  groups_served: 'Parties who were seated and completed their meal.',
+  groups_abandoned: 'Parties who left before a table was ready.',
+  service_level_within_15_min: 'Share of parties seated within 15 minutes.',
+  service_level_within_30_min: 'Share of parties seated within 30 minutes.',
+  table_utilization_overall: 'How fully the dining room stayed in use.',
+  reservation_fulfillment_rate: 'Share of bookings that were honored with a table.',
+  average_reservation_delay: 'How late booked parties were seated on average.',
+  average_table_fit_efficiency: 'How closely table size matched party size.',
 }
 
 const ratioMetrics = new Set<NumericMetricKey>([
@@ -88,15 +85,6 @@ const lowerIsBetterMetrics = new Set<NumericMetricKey>([
   'average_reservation_delay',
 ])
 
-const summaryMetrics: NumericMetricKey[] = [
-  'average_wait_time',
-  'p90_wait_time',
-  'groups_served',
-  'groups_abandoned',
-  'max_queue_length',
-  'table_utilization_overall',
-]
-
 const comparisonTableMetrics: NumericMetricKey[] = [
   'average_wait_time',
   'max_wait_time',
@@ -112,27 +100,36 @@ const comparisonTableMetrics: NumericMetricKey[] = [
   'average_table_fit_efficiency',
 ]
 
-const chartMetrics: NumericMetricKey[] = [
+const chartMetrics = [
   'average_wait_time',
   'groups_served',
   'groups_abandoned',
   'max_queue_length',
   'table_utilization_overall',
-]
+ ] as const satisfies ReadonlyArray<NumericMetricKey>
 
-const comparisonSignalMetrics: NumericMetricKey[] = [
+type ChartMetric = (typeof chartMetrics)[number]
+
+const comparisonChartLabels: Record<ChartMetric, string> = {
+  average_wait_time: 'Average wait',
+  groups_served: 'Parties seated',
+  groups_abandoned: 'Left the line',
+  max_queue_length: 'Longest queue',
+  table_utilization_overall: 'Room use',
+}
+
+const pairPreviewMetrics = [
   'average_wait_time',
   'groups_served',
-  'groups_abandoned',
   'table_utilization_overall',
-]
+] as const satisfies ReadonlyArray<NumericMetricKey>
 
 const chartTheme = {
-  text: '#e2e8f0',
-  muted: '#8ea4c5',
-  grid: 'rgba(148, 163, 184, 0.16)',
-  border: 'rgba(148, 163, 184, 0.22)',
-  tooltip: 'rgba(4, 11, 24, 0.95)',
+  text: '#f7f1ea',
+  muted: '#b7adc2',
+  grid: 'rgba(216, 197, 173, 0.18)',
+  border: 'rgba(216, 197, 173, 0.24)',
+  tooltip: 'rgba(18, 15, 28, 0.96)',
 }
 
 function formatMetricValue(metric: NumericMetricKey, value: number) {
@@ -146,7 +143,9 @@ function formatMetricValue(metric: NumericMetricKey, value: number) {
 }
 
 function formatDelta(metric: NumericMetricKey, value: number) {
-  const formatted = formatMetricValue(metric, Math.abs(value))
+  const formatted = ratioMetrics.has(metric)
+    ? `${(Math.abs(value) * 100).toFixed(1)} pts`
+    : formatMetricValue(metric, Math.abs(value))
   if (value > 0) {
     return `+${formatted}`
   }
@@ -162,14 +161,36 @@ function chartMetricValue(metric: NumericMetricKey, value: number) {
 
 function buildComparisonChartData(result: PairComparison) {
   return chartMetrics.map((metric) => ({
-    metric: metricLabels[metric],
+    metric: comparisonChartLabels[metric],
     A: chartMetricValue(metric, result.A.metrics[metric]),
     B: chartMetricValue(metric, result.B.metrics[metric]),
   }))
 }
 
+function buildPairPreviewRows(result: PairComparison) {
+  return pairPreviewMetrics.map((metric) => {
+    const valueA = result.A.metrics[metric]
+    const valueB = result.B.metrics[metric]
+    const scaledA = chartMetricValue(metric, valueA)
+    const scaledB = chartMetricValue(metric, valueB)
+    const maxValue = Math.max(scaledA, scaledB, 1)
+    const delta = result.metric_deltas_b_minus_a[metric] ?? 0
+    return {
+      metric,
+      label: metricLabels[metric],
+      hint: metricDirectionHint(metric),
+      tone: metricDirectionTone(metric, delta),
+      valueA: formatMetricValue(metric, valueA),
+      valueB: formatMetricValue(metric, valueB),
+      widthA: `${Math.max((scaledA / maxValue) * 100, 14)}%`,
+      widthB: `${Math.max((scaledB / maxValue) * 100, 14)}%`,
+      difference: formatDelta(metric, delta),
+    }
+  })
+}
+
 function metricDirectionHint(metric: NumericMetricKey) {
-  return lowerIsBetterMetrics.has(metric) ? 'Lower is better' : 'Higher is better'
+  return lowerIsBetterMetrics.has(metric) ? 'Usually better when lower' : 'Usually better when higher'
 }
 
 function metricDirectionTone(metric: NumericMetricKey, delta: number): SignalTone {
@@ -180,37 +201,6 @@ function metricDirectionTone(metric: NumericMetricKey, delta: number): SignalTon
   return improved ? 'positive' : 'negative'
 }
 
-function buildImprovementSummary(result: PairComparison) {
-  return comparisonTableMetrics.reduce(
-    (summary, metric) => {
-      const delta = result.metric_deltas_b_minus_a[metric] ?? 0
-      if (delta === 0) {
-        summary.unchanged += 1
-      } else if (metricDirectionTone(metric, delta) === 'positive') {
-        summary.improved += 1
-      } else {
-        summary.worsened += 1
-      }
-      return summary
-    },
-    { improved: 0, worsened: 0, unchanged: 0 },
-  )
-}
-
-function buildMetricLeaderboard(result: PairComparison) {
-  return comparisonTableMetrics
-    .map((metric) => {
-      const delta = result.metric_deltas_b_minus_a[metric] ?? 0
-      return {
-        metric,
-        delta,
-        tone: metricDirectionTone(metric, delta),
-      }
-    })
-    .sort((left, right) => Math.abs(right.delta) - Math.abs(left.delta))
-    .slice(0, 6)
-}
-
 function signalToneFromRatio(value: number): SignalTone {
   if (value >= 0.75) {
     return 'positive'
@@ -219,6 +209,10 @@ function signalToneFromRatio(value: number): SignalTone {
     return 'neutral'
   }
   return 'negative'
+}
+
+function formatCaseStudyTitle(title: string) {
+  return title.replace(/^Pair\s+\d+\s*:\s*/i, '').trim()
 }
 
 function buildRunIntel(result: ScenarioResult) {
@@ -233,36 +227,65 @@ function buildRunIntel(result: ScenarioResult) {
     label: metricLabels[metric],
     value: formatMetricValue(metric, result.metrics[metric]),
     tone: signalToneFromRatio(result.metrics[metric]),
-    caption: metricCaptions[metric] ?? 'Operational quality signal.',
+    caption: metricCaptions[metric] ?? 'Helpful summary signal.',
   }))
-}
-
-function extractHost(url: string) {
-  try {
-    return new URL(url).host
-  } catch {
-    return url.replace(/^https?:\/\//, '')
-  }
 }
 
 function getPresetTitle<T extends { id: string; title: string }>(options: T[], id: string) {
   return options.find((option) => option.id === id)?.title ?? 'Not selected'
 }
 
-function titleCaseKey(value: string) {
-  return value
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, (character) => character.toUpperCase())
+function buildBuilderSnapshot(
+  form: BuilderFormState,
+  presets: BuilderPresetsResponse,
+): Array<{ label: string; value: string }> {
+  return [
+    {
+      label: 'Service window',
+      value: `${form.simulationStart} to ${form.simulationEnd}`,
+    },
+    {
+      label: 'Waitlist',
+      value: getPresetTitle(presets.queue_structures, form.queueStructureId),
+    },
+    {
+      label: 'Bookings',
+      value: getPresetTitle(presets.reservation_policies, form.reservationPolicyId),
+    },
+    {
+      label: 'Table reset',
+      value: getPresetTitle(presets.service_policies, form.servicePolicyId),
+    },
+    {
+      label: 'Arrival pattern',
+      value: getPresetTitle(presets.arrival_scenarios, form.arrivalScenarioId),
+    },
+  ]
 }
 
-function statusTone(status: string) {
-  if (status === 'completed') {
-    return 'success'
+function buildMetricDeltaMap(
+  resultA: ScenarioResult,
+  resultB: ScenarioResult,
+): PairComparison['metric_deltas_b_minus_a'] {
+  return Object.fromEntries(
+    comparisonTableMetrics.map((metric) => [
+      metric,
+      Number((resultB.metrics[metric] - resultA.metrics[metric]).toFixed(4)),
+    ]),
+  )
+}
+
+function buildCustomPairComparison(
+  comparisonId: string,
+  resultA: ScenarioResult,
+  resultB: ScenarioResult,
+): PairComparison {
+  return {
+    case_study: comparisonId,
+    A: resultA,
+    B: resultB,
+    metric_deltas_b_minus_a: buildMetricDeltaMap(resultA, resultB),
   }
-  if (status === 'abandoned' || status === 'no_show') {
-    return 'danger'
-  }
-  return 'neutral'
 }
 
 function AppShell() {
@@ -271,10 +294,8 @@ function AppShell() {
   const [caseStudies, setCaseStudies] = useState<CaseStudyMetadata[]>([])
   const [selectedCaseStudy, setSelectedCaseStudy] = useState('')
   const [starterCaseStudy, setStarterCaseStudy] = useState('')
-  const [starterVersion, setStarterVersion] = useState<'A' | 'B'>('A')
-  const [schemas, setSchemas] = useState<Record<string, string>>({})
   const [builderPresets, setBuilderPresets] = useState<BuilderPresetsResponse | null>(null)
-  const [customForm, setCustomForm] = useState<BuilderFormState | null>(null)
+  const [customForms, setCustomForms] = useState<BuilderPairState | null>(null)
 
   const [pairResult, setPairResult] = useState<PairComparison | null>(null)
   const [comparisonLoading, setComparisonLoading] = useState(false)
@@ -282,11 +303,16 @@ function AppShell() {
 
   const [customLoading, setCustomLoading] = useState(false)
   const [customError, setCustomError] = useState<string | null>(null)
-  const [customResult, setCustomResult] = useState<ScenarioResult | null>(null)
+  const [customPairResult, setCustomPairResult] = useState<PairComparison | null>(null)
 
   const selectedCase = useMemo(
     () => caseStudies.find((entry) => entry.case_study === selectedCaseStudy) ?? null,
     [caseStudies, selectedCaseStudy],
+  )
+
+  const starterCase = useMemo(
+    () => caseStudies.find((entry) => entry.case_study === starterCaseStudy) ?? null,
+    [caseStudies, starterCaseStudy],
   )
 
   const comparisonChartData = useMemo(
@@ -294,190 +320,119 @@ function AppShell() {
     [pairResult],
   )
 
-  const totalPresetCount = useMemo(() => {
-    if (!builderPresets) {
-      return 0
-    }
-    return (
-      builderPresets.restaurant_layouts.length +
-      builderPresets.queue_structures.length +
-      builderPresets.reservation_policies.length +
-      builderPresets.seating_policies.length +
-      builderPresets.service_policies.length +
-      builderPresets.arrival_scenarios.length
-    )
-  }, [builderPresets])
-
-  const heroStats = useMemo(
-    () => [
-      {
-        label: 'Official labs',
-        value: caseStudies.length ? String(caseStudies.length) : '--',
-        caption: 'published A/B experiment pairs',
-        mono: false,
-      },
-      {
-        label: 'Builder modules',
-        value: totalPresetCount ? String(totalPresetCount) : '--',
-        caption: 'guided controls ready to remix',
-        mono: false,
-      },
-      {
-        label: 'Production web',
-        value: extractHost(PRODUCTION_FRONTEND_URL),
-        caption: 'fixed public dashboard entry',
-        mono: true,
-      },
-      {
-        label: 'API target',
-        value: extractHost(API_BASE_URL),
-        caption:
-          API_BASE_URL === PRODUCTION_BACKEND_URL
-            ? 'live production backend'
-            : 'current build environment target',
-        mono: true,
-      },
-    ],
-    [caseStudies.length, totalPresetCount],
+  const customComparisonChartData = useMemo(
+    () => (customPairResult ? buildComparisonChartData(customPairResult) : []),
+    [customPairResult],
   )
 
-  const systemCards = useMemo(
-    () => [
-      {
-        label: 'Current mode',
-        value: mode === 'official' ? 'Official cockpit' : 'Custom lab',
-        caption:
-          mode === 'official'
-            ? 'Compare the published case-study pairs.'
-            : 'Shape your own operating scenario.',
-      },
-      {
-        label: 'Primary action',
-        value: mode === 'official' ? 'Run A/B comparison' : 'Run custom simulation',
-        caption: 'Production API calls are wired into the deployed frontend build.',
-      },
-      {
-        label: 'Stable front door',
-        value: extractHost(PRODUCTION_FRONTEND_URL),
-        caption: 'Keep the Render service name unchanged to keep this URL.',
-      },
-    ],
-    [mode],
-  )
-
-  const generatedPayload = useMemo(() => {
-    if (!builderPresets || !customForm) {
+  const generatedPayloads = useMemo(() => {
+    if (!builderPresets || !customForms) {
       return null
     }
-    return buildCustomScenarioPayload(customForm, builderPresets)
-  }, [builderPresets, customForm])
-
-  const builderSummary = useMemo(() => {
-    if (!builderPresets || !customForm) {
-      return ''
+    return {
+      A: buildCustomScenarioPayload(customForms.A, builderPresets),
+      B: buildCustomScenarioPayload(customForms.B, builderPresets),
     }
-    return summarizeBuilderSelections(customForm, builderPresets)
-  }, [builderPresets, customForm])
+  }, [builderPresets, customForms])
 
-  const builderSnapshot = useMemo(() => {
-    if (!builderPresets || !customForm) {
+  const customOptionSnapshots = useMemo(() => {
+    if (!builderPresets || !customForms) {
+      return null
+    }
+    return {
+      A: buildBuilderSnapshot(customForms.A, builderPresets),
+      B: buildBuilderSnapshot(customForms.B, builderPresets),
+    }
+  }, [builderPresets, customForms])
+
+  const customOptionSummaries = useMemo(() => {
+    if (!builderPresets || !customForms) {
+      return null
+    }
+    return {
+      A: summarizeBuilderSelections(customForms.A, builderPresets),
+      B: summarizeBuilderSelections(customForms.B, builderPresets),
+    }
+  }, [builderPresets, customForms])
+
+  const pairOverviewRows = useMemo<CaseStudyOverviewRow[]>(() => {
+    if (!builderPresets || !selectedCase) {
       return []
     }
-    return [
-      {
-        label: 'Starter pair',
-        value:
-          caseStudies.find((entry) => entry.case_study === starterCaseStudy)?.title ??
-          'Choose a starter',
-      },
-      {
-        label: 'Service window',
-        value: `${customForm.simulationStart} to ${customForm.simulationEnd}`,
-      },
-      {
-        label: 'Queue structure',
-        value: getPresetTitle(builderPresets.queue_structures, customForm.queueStructureId),
-      },
-      {
-        label: 'Service policy',
-        value: getPresetTitle(builderPresets.service_policies, customForm.servicePolicyId),
-      },
-      {
-        label: 'Reservation mode',
-        value: getPresetTitle(builderPresets.reservation_policies, customForm.reservationPolicyId),
-      },
-      {
-        label: 'Demand pattern',
-        value: getPresetTitle(builderPresets.arrival_scenarios, customForm.arrivalScenarioId),
-      },
-    ]
-  }, [builderPresets, caseStudies, customForm, starterCaseStudy])
+    return buildCaseStudyOverviewRows(selectedCase, builderPresets)
+  }, [builderPresets, selectedCase])
 
-  const comparisonSignals = useMemo(() => {
-    if (!pairResult) {
+  const customComparisonRows = useMemo<CaseStudyOverviewRow[]>(() => {
+    if (!builderPresets || !customForms) {
       return []
     }
-    return comparisonSignalMetrics.map((metric) => {
-      const delta = pairResult.metric_deltas_b_minus_a[metric] ?? 0
+    return buildCustomComparisonRows(customForms.A, customForms.B, builderPresets)
+  }, [builderPresets, customForms])
+
+  const starterOptions = useMemo(() => {
+    return caseStudies.map((entry) => {
+      const changedRow = builderPresets
+        ? buildCaseStudyOverviewRows(entry, builderPresets).find((row) => row.changed)
+        : null
+      const focusLabel = entry.focus_label?.trim() || changedRow?.label.toLowerCase()
       return {
-        metric,
-        label: metricLabels[metric],
-        value: formatDelta(metric, delta),
-        tone: metricDirectionTone(metric, delta),
-        caption: `${metricDirectionHint(metric)}. B minus A.`,
+        id: entry.case_study,
+        title: formatCaseStudyTitle(entry.title),
+        description: focusLabel
+          ? `Start from the guided comparison where ${focusLabel.toLowerCase()} is the main choice being tested.`
+          : 'Start from this guided comparison and adapt it to your venue.',
       }
     })
-  }, [pairResult])
+  }, [builderPresets, caseStudies])
 
-  const comparisonSummary = useMemo(
-    () => (pairResult ? buildImprovementSummary(pairResult) : null),
-    [pairResult],
-  )
-
-  const comparisonLeaderboard = useMemo(
-    () => (pairResult ? buildMetricLeaderboard(pairResult) : []),
-    [pairResult],
-  )
-
-  const runIntel = useMemo(() => (customResult ? buildRunIntel(customResult) : []), [customResult])
+  const customRunIntel = useMemo(() => {
+    if (!customPairResult) {
+      return null
+    }
+    return {
+      A: buildRunIntel(customPairResult.A),
+      B: buildRunIntel(customPairResult.B),
+    }
+  }, [customPairResult])
 
   useEffect(() => {
     async function bootstrap() {
       try {
-        const [caseStudyPayload, schemaPayload, presetPayload] = await Promise.all([
+        const [caseStudyPayload, presetPayload] = await Promise.all([
           fetchCaseStudies(),
-          fetchSchemas(),
           fetchBuilderPresets(),
         ])
 
         setCaseStudies(caseStudyPayload.case_studies)
-        setSchemas(schemaPayload.schemas)
         setBuilderPresets(presetPayload)
 
-        const initialCaseStudy = caseStudyPayload.case_studies[0]?.case_study ?? ''
+        const initialCase = caseStudyPayload.case_studies[0] ?? null
+        const initialCaseStudy = initialCase?.case_study ?? ''
         if (initialCaseStudy) {
           setSelectedCaseStudy(initialCaseStudy)
           setStarterCaseStudy(initialCaseStudy)
-          setCustomForm(buildFormFromStarter(initialCaseStudy, 'A', presetPayload))
+          setCustomForms({
+            A: buildFormFromStarter(initialCase, 'A', presetPayload),
+            B: buildFormFromStarter(initialCase, 'B', presetPayload),
+          })
           setComparisonLoading(true)
           setComparisonError(null)
           try {
             const response = await runCaseStudyComparison(initialCaseStudy)
             setPairResult(response)
           } catch (error) {
-            setComparisonError(
-              error instanceof Error ? error.message : 'Unable to run case-study comparison.',
-            )
+            setComparisonError(error instanceof Error ? error.message : "We couldn't compare those two versions.")
           } finally {
             setComparisonLoading(false)
           }
         } else {
-          setCustomForm(buildFormFromStarter('pair_01_table_mix', 'A', presetPayload))
+          setCustomForms({
+            A: buildFormFromStarter(null, 'A', presetPayload),
+            B: buildFormFromStarter(null, 'B', presetPayload),
+          })
         }
       } catch (error) {
-        setBootstrapError(
-          error instanceof Error ? error.message : 'Failed to load dashboard metadata.',
-        )
+        setBootstrapError(error instanceof Error ? error.message : "We couldn't load the scenario list.")
       }
     }
 
@@ -494,67 +449,84 @@ function AppShell() {
       const response = await runCaseStudyComparison(caseStudy)
       setPairResult(response)
     } catch (error) {
-      setComparisonError(
-        error instanceof Error ? error.message : 'Unable to run case-study comparison.',
-      )
+      setComparisonError(error instanceof Error ? error.message : "We couldn't compare those two versions.")
     } finally {
       setComparisonLoading(false)
     }
   }
 
-  function updateCustomForm(updater: (current: BuilderFormState) => BuilderFormState) {
-    setCustomForm((current) => (current ? updater(current) : current))
+  function updateCustomForms(updater: (current: BuilderPairState) => BuilderPairState) {
+    setCustomForms((current) => (current ? updater(current) : current))
     setCustomError(null)
-    setCustomResult(null)
+    setCustomPairResult(null)
   }
 
   function updateCustomField<Key extends keyof BuilderFormState>(
+    side: BuilderSide,
     key: Key,
     value: BuilderFormState[Key],
   ) {
-    updateCustomForm((current) => ({
+    updateCustomForms((current) => ({
       ...current,
-      [key]: value,
+      [side]: {
+        ...current[side],
+        [key]: value,
+      },
     }))
   }
 
-  function handleApplyStarter(caseStudy = starterCaseStudy, version = starterVersion) {
+  function handleApplyStarter(caseStudy = starterCaseStudy) {
     if (!builderPresets || !caseStudy) {
       return
     }
-    setCustomForm(buildFormFromStarter(caseStudy, version, builderPresets))
+    const nextStarterCase = caseStudies.find((entry) => entry.case_study === caseStudy) ?? null
+    setCustomForms({
+      A: buildFormFromStarter(nextStarterCase, 'A', builderPresets),
+      B: buildFormFromStarter(nextStarterCase, 'B', builderPresets),
+    })
     setCustomError(null)
-    setCustomResult(null)
+    setCustomPairResult(null)
   }
 
-  function handleReservationPresetChange(nextId: string) {
-    updateCustomForm((current) => {
+  function handleReservationPresetChange(side: BuilderSide, nextId: string) {
+    updateCustomForms((current) => {
       if (!builderPresets) {
         return current
       }
+      const currentForm = current[side]
       const preset = builderPresets.reservation_policies.find((item) => item.id === nextId)
       const holdMinutes = preset?.data.hold_tables_for_reservations
-        ? Math.max(current.holdMinutes, preset.data.default_hold_minutes || 10)
+        ? Math.max(currentForm.holdMinutes, preset.data.default_hold_minutes || 10)
         : 0
       return {
         ...current,
-        reservationPolicyId: nextId,
-        holdMinutes,
+        [side]: {
+          ...currentForm,
+          reservationPolicyId: nextId,
+          holdMinutes,
+        },
       }
     })
   }
 
   async function handleRunCustom() {
-    if (!generatedPayload) {
+    if (!generatedPayloads) {
       return
     }
     setCustomLoading(true)
     setCustomError(null)
     try {
-      const response = await runCustomScenario(generatedPayload)
-      setCustomResult(response)
+      const [resultA, resultB] = await Promise.all([
+        runCustomScenario(generatedPayloads.A),
+        runCustomScenario(generatedPayloads.B),
+      ])
+      setCustomPairResult(buildCustomPairComparison(starterCaseStudy || 'custom_compare', resultA, resultB))
     } catch (error) {
-      setCustomError(error instanceof Error ? error.message : 'Custom simulation failed.')
+      setCustomError(
+        error instanceof Error
+          ? error.message
+          : "We couldn't compare those two custom options right now.",
+      )
     } finally {
       setCustomLoading(false)
     }
@@ -562,49 +534,14 @@ function AppShell() {
 
   return (
     <div className="app-shell">
-      <header className="hero">
+      <header className="hero hero-simple">
         <div className="hero-main">
-          <div className="hero-kicker-row">
-            <p className="eyebrow">COMP1110 Topic C</p>
-            <div className="status-cluster">
-              <StatusChip tone="positive">Stable Render URL</StatusChip>
-              <StatusChip tone="neutral">{extractHost(PRODUCTION_FRONTEND_URL)}</StatusChip>
-            </div>
-          </div>
-          <h1>Restaurant Queue Command Center</h1>
+          <p className="eyebrow">Restaurant Queue Comparison</p>
+          <h1>Restaurant Configuration and Queue Comparison</h1>
           <p className="hero-copy">
-            Monitor official experiments, launch guided scenarios, and inspect wait-time, throughput,
-            and table behavior from a single production-grade operations dashboard.
+            Compare restaurant layouts, waitlist setups, booking rules, and service policies across
+            prepared scenario pairs or your own custom A/B comparison.
           </p>
-          <div className="hero-links">
-            <a
-              className="ghost-link"
-              href={PRODUCTION_FRONTEND_URL}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Open production dashboard
-            </a>
-            <a
-              className="ghost-link"
-              href={`${PRODUCTION_BACKEND_URL}/health`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Open API health
-            </a>
-          </div>
-        </div>
-        <div className="hero-stat-grid">
-          {heroStats.map((item) => (
-            <InfoTile
-              key={item.label}
-              label={item.label}
-              value={item.value}
-              caption={item.caption}
-              mono={item.mono}
-            />
-          ))}
         </div>
       </header>
 
@@ -612,41 +549,29 @@ function AppShell() {
 
       <main className="layout">
         <section className="panel command-panel">
-          <div className="command-grid">
-            <div className="command-copy">
-              <p className="eyebrow">Operations Console</p>
-              <h2>Simulation Control Center</h2>
-              <p className="muted">
-                Switch between the official experiment cockpit and the custom scenario lab. The
-                deployed frontend is wired to the production API target baked into the Render build.
-              </p>
-              <div className="mode-switch" role="tablist" aria-label="Dashboard mode">
-                <button
-                  type="button"
-                  className={mode === 'official' ? 'mode-pill active' : 'mode-pill'}
-                  onClick={() => setMode('official')}
-                >
-                  Official Scenarios
-                </button>
-                <button
-                  type="button"
-                  className={mode === 'custom' ? 'mode-pill active' : 'mode-pill'}
-                  onClick={() => setMode('custom')}
-                >
-                  Custom Scenario
-                </button>
-              </div>
-            </div>
-            <div className="system-status-grid">
-              {systemCards.map((item) => (
-                <InfoTile
-                  key={item.label}
-                  label={item.label}
-                  value={item.value}
-                  caption={item.caption}
-                  compact
-                />
-              ))}
+          <div className="command-copy">
+            <p className="eyebrow">Choose a view</p>
+            <h2>{mode === 'official' ? 'Prepared scenario pairs' : 'Custom A/B comparison'}</h2>
+            <p className="muted">
+              {mode === 'official'
+                ? 'Each prepared pair changes one main configuration choice so you can compare the outcome more directly.'
+                : 'Set up Option A and Option B, then compare both results and the difference from A to B.'}
+            </p>
+            <div className="mode-switch" role="tablist" aria-label="Planner mode">
+              <button
+                type="button"
+                className={mode === 'official' ? 'mode-pill active' : 'mode-pill'}
+                onClick={() => setMode('official')}
+              >
+                Scenario pairs
+              </button>
+              <button
+                type="button"
+                className={mode === 'custom' ? 'mode-pill active' : 'mode-pill'}
+                onClick={() => setMode('custom')}
+              >
+                Custom comparison
+              </button>
             </div>
           </div>
         </section>
@@ -655,195 +580,167 @@ function AppShell() {
           <section className="panel official-panel">
             <div className="section-head">
               <div>
-                <p className="eyebrow">Official Experiment Lab</p>
-                <h2>Case-Study Comparison</h2>
+                <p className="eyebrow">Scenario Pair</p>
+                <h2>Compare two prepared configurations</h2>
               </div>
-              {comparisonSummary ? (
-                <div className="score-pill-row">
-                  <StatusChip tone="positive">{comparisonSummary.improved} improved</StatusChip>
-                  <StatusChip tone="negative">{comparisonSummary.worsened} slipped</StatusChip>
-                  <StatusChip tone="neutral">{comparisonSummary.unchanged} flat</StatusChip>
-                </div>
-              ) : null}
             </div>
 
             <div className="official-shell">
               <aside className="official-control-card">
                 <label className="control-block">
-                  <span className="control-label">Scenario pair</span>
+                  <span className="control-label">Choose a service scenario</span>
                   <select
                     value={selectedCaseStudy}
                     onChange={(event) => setSelectedCaseStudy(event.target.value)}
                   >
                     {caseStudies.map((entry) => (
                       <option key={entry.case_study} value={entry.case_study}>
-                        {entry.title}
+                        {formatCaseStudyTitle(entry.title)}
                       </option>
                     ))}
                   </select>
                 </label>
+                <p className="control-note muted">
+                  Each scenario keeps most of the service plan steady and changes one main decision,
+                  so the difference is easier to read.
+                </p>
                 <button
                   type="button"
                   className="primary control-button"
                   onClick={() => void handleRunComparison()}
                   disabled={comparisonLoading || !selectedCaseStudy}
                 >
-                  {comparisonLoading ? 'Refreshing production comparison...' : 'Run A/B comparison'}
+                  {comparisonLoading ? 'Loading the guest impact...' : 'Show the difference'}
                 </button>
-                <p className="muted control-note">
-                  Comparison calls are hitting the live API at `{extractHost(API_BASE_URL)}`.
-                </p>
-
-                {selectedCase ? (
-                  <div className="scenario-summary-card">
-                    <p className="eyebrow">Selected Pair</p>
-                    <h3>{selectedCase.title}</h3>
-                    <p className="muted">{selectedCase.summary}</p>
-                    <div className="tag-row">
-                      <span className="tag-chip">{selectedCase.case_study}</span>
-                      <span className="tag-chip">{selectedCase.versions.join(' / ')}</span>
-                    </div>
-                  </div>
-                ) : null}
-
                 {comparisonError ? <MessageCard tone="danger" message={comparisonError} /> : null}
               </aside>
 
               <div className="official-stage">
+                {selectedCase && pairOverviewRows.length ? (
+                  <PairOverviewTable
+                    title={formatCaseStudyTitle(selectedCase.title)}
+                    summary={selectedCase.summary}
+                    rows={pairOverviewRows}
+                    result={pairResult}
+                  />
+                ) : null}
+
                 {pairResult ? (
                   <>
                     <div className="metric-grid metric-grid-compact">
                       <MetricCard
-                        label="Version A avg wait"
+                        label="Average wait with Option A"
                         value={formatMetricValue(
                           'average_wait_time',
                           pairResult.A.metrics.average_wait_time,
                         )}
-                        caption={pairResult.A.scenario_name}
+                        caption="Option A"
                         tone="blue"
                       />
                       <MetricCard
-                        label="Version B avg wait"
+                        label="Average wait with Option B"
                         value={formatMetricValue(
                           'average_wait_time',
                           pairResult.B.metrics.average_wait_time,
                         )}
-                        caption={pairResult.B.scenario_name}
+                        caption="Option B"
                         tone="teal"
                       />
                       <MetricCard
-                        label="Delta groups served"
+                        label="Extra parties seated with B"
                         value={formatDelta(
                           'groups_served',
                           pairResult.metric_deltas_b_minus_a.groups_served ?? 0,
                         )}
-                        caption="B minus A"
+                        caption="Difference if you switch from A to B"
                         tone="purple"
                       />
                       <MetricCard
-                        label="Delta table utilization"
+                        label="Change in dining room use with B"
                         value={formatDelta(
                           'table_utilization_overall',
                           pairResult.metric_deltas_b_minus_a.table_utilization_overall ?? 0,
                         )}
-                        caption="B minus A"
+                        caption="Difference if you switch from A to B"
                         tone="amber"
                       />
                     </div>
 
-                    <div className="signal-grid">
-                      {comparisonSignals.map((item) => (
-                        <SignalCard
-                          key={item.metric}
-                          label={item.label}
-                          value={item.value}
-                          caption={item.caption}
-                          tone={item.tone}
-                        />
-                      ))}
-                    </div>
+                    <MessageCard
+                      tone="neutral"
+                      message='"Difference if you switch to B" compares Option B with Option A. A plus sign means the number is higher in B, a minus sign means it is lower, and percentage-based measures are shown in points so they are easier to read.'
+                    />
 
-                    <div className="analysis-grid">
-                      <div className="chart-panel">
-                        <div className="chart-header">
-                          <div>
-                            <h3>Performance Spread</h3>
-                            <p className="muted">
-                              Mixed wait, throughput, and utilization signals for the currently
-                              selected case-study pair.
-                            </p>
-                          </div>
-                        </div>
-                        <div className="chart-wrap">
-                          <ResponsiveContainer width="100%" height={360}>
-                            <BarChart data={comparisonChartData} barGap={10}>
-                              <defs>
-                                <linearGradient id="officialBarA" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="0%" stopColor="#67e8f9" />
-                                  <stop offset="100%" stopColor="#2563eb" />
-                                </linearGradient>
-                                <linearGradient id="officialBarB" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="0%" stopColor="#6ee7b7" />
-                                  <stop offset="100%" stopColor="#14b8a6" />
-                                </linearGradient>
-                              </defs>
-                              <CartesianGrid stroke={chartTheme.grid} vertical={false} />
-                              <XAxis
-                                dataKey="metric"
-                                angle={-12}
-                                textAnchor="end"
-                                interval={0}
-                                height={76}
-                                stroke={chartTheme.grid}
-                                tick={{ fill: chartTheme.muted, fontSize: 12 }}
-                              />
-                              <YAxis
-                                stroke={chartTheme.grid}
-                                tick={{ fill: chartTheme.muted, fontSize: 12 }}
-                              />
-                              <Tooltip
-                                contentStyle={{
-                                  background: chartTheme.tooltip,
-                                  border: `1px solid ${chartTheme.border}`,
-                                  borderRadius: 18,
-                                  boxShadow: '0 20px 42px rgba(2, 6, 23, 0.48)',
-                                }}
-                                labelStyle={{ color: chartTheme.text, fontWeight: 700 }}
-                                itemStyle={{ color: chartTheme.text }}
-                              />
-                              <Legend
-                                wrapperStyle={{ color: chartTheme.text, paddingTop: 16 }}
-                                formatter={(value) => (
-                                  <span style={{ color: chartTheme.text }}>{value}</span>
-                                )}
-                              />
-                              <Bar name="Version A" dataKey="A" fill="url(#officialBarA)" radius={[10, 10, 0, 0]} />
-                              <Bar name="Version B" dataKey="B" fill="url(#officialBarB)" radius={[10, 10, 0, 0]} />
-                            </BarChart>
-                          </ResponsiveContainer>
+                    <div className="chart-panel">
+                      <div className="chart-header">
+                        <div>
+                          <h3>Guest experience side by side</h3>
+                          <p className="muted">
+                            Use this view when you want a quick read on where Option A and Option
+                            B feel meaningfully different.
+                          </p>
                         </div>
                       </div>
-
-                      <div className="table-card highlights-card">
-                        <div className="chart-header">
-                          <div>
-                            <h3>Decision Signals</h3>
-                            <p className="muted">
-                              Largest shifts between Version B and Version A, sorted by impact size.
-                            </p>
-                          </div>
-                        </div>
-                        <div className="signal-list">
-                          {comparisonLeaderboard.map((item) => (
-                            <div key={item.metric} className={`signal-row ${item.tone}`}>
-                              <div>
-                                <strong>{metricLabels[item.metric]}</strong>
-                                <span>{metricDirectionHint(item.metric)}</span>
-                              </div>
-                              <span className="signal-value">{formatDelta(item.metric, item.delta)}</span>
-                            </div>
-                          ))}
-                        </div>
+                      <div className="chart-wrap">
+                        <ResponsiveContainer width="100%" height={320}>
+                          <BarChart data={comparisonChartData} barGap={10}>
+                            <defs>
+                              <linearGradient id="officialBarA" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#67e8f9" />
+                                <stop offset="100%" stopColor="#2563eb" />
+                              </linearGradient>
+                              <linearGradient id="officialBarB" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#6ee7b7" />
+                                <stop offset="100%" stopColor="#14b8a6" />
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid stroke={chartTheme.grid} vertical={false} />
+                            <XAxis
+                              dataKey="metric"
+                              angle={0}
+                              textAnchor="middle"
+                              interval={0}
+                              tickMargin={12}
+                              height={56}
+                              stroke={chartTheme.grid}
+                              tick={{ fill: chartTheme.muted, fontSize: 11 }}
+                            />
+                            <YAxis
+                              stroke={chartTheme.grid}
+                              tick={{ fill: chartTheme.muted, fontSize: 11 }}
+                            />
+                            <Tooltip
+                              contentStyle={{
+                                background: chartTheme.tooltip,
+                                border: `1px solid ${chartTheme.border}`,
+                                borderRadius: 18,
+                                boxShadow: '0 20px 42px rgba(2, 6, 23, 0.48)',
+                              }}
+                              labelStyle={{ color: chartTheme.text, fontWeight: 700 }}
+                              itemStyle={{ color: chartTheme.text }}
+                            />
+                            <Legend
+                              wrapperStyle={{ color: chartTheme.text, paddingTop: 16 }}
+                              formatter={(value) => (
+                                <span style={{ color: chartTheme.text }}>{value}</span>
+                              )}
+                            />
+                            <Bar
+                              name="Option A"
+                              dataKey="A"
+                              fill="url(#officialBarA)"
+                              radius={[10, 10, 0, 0]}
+                              maxBarSize={44}
+                            />
+                            <Bar
+                              name="Option B"
+                              dataKey="B"
+                              fill="url(#officialBarB)"
+                              radius={[10, 10, 0, 0]}
+                              maxBarSize={44}
+                            />
+                          </BarChart>
+                        </ResponsiveContainer>
                       </div>
                     </div>
 
@@ -851,8 +748,8 @@ function AppShell() {
                   </>
                 ) : (
                   <EmptyState
-                    title="No comparison yet"
-                    message="Run a case study to inspect the official A/B experiment."
+                    title="Pick a comparison to get started"
+                    message='Choose one of the guided scenarios, then press "Show the difference" to preview how the guest experience changes.'
                   />
                 )}
               </div>
@@ -862,391 +759,630 @@ function AppShell() {
           <section className="panel custom-panel">
             <div className="section-head">
               <div>
-                <p className="eyebrow">Scenario Builder</p>
-                <h2>Custom Scenario Lab</h2>
+                <p className="eyebrow">Custom Comparison</p>
+                <h2>Set up Option A and Option B</h2>
               </div>
-              <StatusChip tone={customResult ? 'positive' : 'neutral'}>
-                {customResult ? 'Last run ready' : 'Builder armed'}
-              </StatusChip>
             </div>
 
             <p className="muted section-intro">
-              Start from an official case, swap restaurant and policy modules, then launch a guided
-              simulation without editing raw files in the main flow.
+              Load a prepared pair, edit both options independently, and compare the two outcomes
+              side by side.
             </p>
 
             {customError ? <MessageCard tone="danger" message={customError} /> : null}
 
-            {!builderPresets || !customForm ? (
+            {!builderPresets || !customForms || !customOptionSnapshots || !customOptionSummaries ? (
               <EmptyState
-                title="Loading builder"
-                message="The guided custom scenario controls will appear once the preset catalog loads."
+                title="Loading comparison builder"
+                message="Both option editors will appear in a moment."
               />
             ) : (
               <>
-                <div className="custom-shell">
-                  <div className="custom-builder-column">
-                    <div className="builder-section">
-                      <div className="builder-section-head">
-                        <div>
-                          <p className="eyebrow">Starter</p>
-                          <h3>Base Official Scenario</h3>
-                        </div>
+                <div className="custom-builder-column">
+                  <div className="builder-section">
+                    <div className="builder-section-head">
+                      <div>
+                        <p className="eyebrow">Starting Point</p>
+                        <h3>Load a prepared A/B pair</h3>
                       </div>
-                      <div className="builder-grid">
-                        <SelectField
-                          label="Official case study"
-                          value={starterCaseStudy}
-                          onChange={setStarterCaseStudy}
-                          options={caseStudies.map((entry) => ({
-                            id: entry.case_study,
-                            title: entry.title,
-                            description: entry.summary,
-                          }))}
-                        />
-                        <SelectField
-                          label="Starter version"
-                          value={starterVersion}
-                          onChange={(value) => setStarterVersion(value as 'A' | 'B')}
-                          options={[
-                            {
-                              id: 'A',
-                              title: 'Version A',
-                              description: 'Use the A version as the launch point.',
-                            },
-                            {
-                              id: 'B',
-                              title: 'Version B',
-                              description: 'Use the B version as the launch point.',
-                            },
-                          ]}
-                        />
-                        <ActionField
-                          label="Reset builder"
-                          description="Apply the selected official case to refresh every module below."
+                    </div>
+                    <div className="builder-grid">
+                      <SelectField
+                        label="Prepared scenario pair"
+                        value={starterCaseStudy}
+                        onChange={setStarterCaseStudy}
+                        options={starterOptions}
+                      />
+                      <ActionField
+                        label="Load both options"
+                        description="Option A loads the first setup from this pair and Option B loads the second setup."
+                      >
+                        <button
+                          type="button"
+                          onClick={() => handleApplyStarter()}
+                          disabled={!starterCaseStudy}
                         >
-                          <button
-                            type="button"
-                            onClick={() => handleApplyStarter()}
-                            disabled={!starterCaseStudy}
-                          >
-                            Load selected starter
-                          </button>
-                        </ActionField>
-                      </div>
+                          Load Option A and Option B
+                        </button>
+                      </ActionField>
                     </div>
-
-                    <div className="builder-section">
-                      <div className="builder-section-head">
-                        <div>
-                          <p className="eyebrow">Restaurant Setup</p>
-                          <h3>Venue And Queue Layout</h3>
-                        </div>
-                      </div>
-                      <div className="builder-grid">
-                        <InputField
-                          label="Scenario name"
-                          value={customForm.scenarioName}
-                          onChange={(value) => updateCustomField('scenarioName', value)}
-                          description="Used to label this custom simulation result."
-                        />
-                        <InputField
-                          label="Restaurant name"
-                          value={customForm.restaurantName}
-                          onChange={(value) => updateCustomField('restaurantName', value)}
-                          description="Displayed in the generated restaurant configuration."
-                        />
-                        <InputField
-                          label="Opening time"
-                          type="time"
-                          value={customForm.simulationStart}
-                          onChange={(value) => updateCustomField('simulationStart', value)}
-                          description="Simulation start time for the venue."
-                        />
-                        <InputField
-                          label="Closing time"
-                          type="time"
-                          value={customForm.simulationEnd}
-                          onChange={(value) => updateCustomField('simulationEnd', value)}
-                          description="Simulation end time for the venue."
-                        />
-                        <PresetField
-                          label="Table layout"
-                          value={customForm.restaurantLayoutId}
-                          onChange={(value) => updateCustomField('restaurantLayoutId', value)}
-                          options={builderPresets.restaurant_layouts}
-                        />
-                        <PresetField
-                          label="Queue structure"
-                          value={customForm.queueStructureId}
-                          onChange={(value) => updateCustomField('queueStructureId', value)}
-                          options={builderPresets.queue_structures}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="builder-section">
-                      <div className="builder-section-head">
-                        <div>
-                          <p className="eyebrow">Policy Setup</p>
-                          <h3>Reservations, Seating, And Service</h3>
-                        </div>
-                      </div>
-                      <div className="builder-grid">
-                        <PresetField
-                          label="Reservation hold policy"
-                          value={customForm.reservationPolicyId}
-                          onChange={handleReservationPresetChange}
-                          options={builderPresets.reservation_policies}
-                        />
-                        <NumberField
-                          label="Hold minutes"
-                          value={customForm.holdMinutes}
-                          min={0}
-                          disabled={
-                            !builderPresets.reservation_policies.find(
-                              (item) => item.id === customForm.reservationPolicyId,
-                            )?.data.hold_tables_for_reservations
-                          }
-                          onChange={(value) => updateCustomField('holdMinutes', value)}
-                          description="How long a reserved table stays protected before release."
-                        />
-                        <PresetField
-                          label="Seating strategy"
-                          value={customForm.seatingPolicyId}
-                          onChange={(value) => updateCustomField('seatingPolicyId', value)}
-                          options={builderPresets.seating_policies}
-                        />
-                        <PresetField
-                          label="Service capacity"
-                          value={customForm.servicePolicyId}
-                          onChange={(value) => updateCustomField('servicePolicyId', value)}
-                          options={builderPresets.service_policies}
-                        />
-                        <SelectField
-                          label="Abandonment rule"
-                          value={customForm.abandonmentEnabled ? 'enabled' : 'disabled'}
-                          onChange={(value) =>
-                            updateCustomField('abandonmentEnabled', value === 'enabled')
-                          }
-                          options={[
-                            {
-                              id: 'disabled',
-                              title: 'Disabled',
-                              description: 'Every group stays until seated or closed out.',
-                            },
-                            {
-                              id: 'enabled',
-                              title: 'Enabled',
-                              description: 'Groups may leave once their wait exceeds tolerance.',
-                            },
-                          ]}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="builder-section">
-                      <div className="builder-section-head">
-                        <div>
-                          <p className="eyebrow">Demand Setup</p>
-                          <h3>Arrival Pattern</h3>
-                        </div>
-                      </div>
-                      <div className="builder-grid">
-                        <PresetField
-                          label="Arrival scenario"
-                          value={customForm.arrivalScenarioId}
-                          onChange={(value) => updateCustomField('arrivalScenarioId', value)}
-                          options={builderPresets.arrival_scenarios}
-                          wide
-                        />
-                      </div>
-                    </div>
-
-                    {generatedPayload ? (
-                      <details className="advanced-panel">
-                        <summary>Advanced payload preview</summary>
-                        <p className="muted">
-                          These generated files are still available for debugging and validation, but
-                          the primary workflow stays on the guided control surface above.
-                        </p>
-                        <div className="editor-grid">
-                          <PreviewEditorCard
-                            title="Restaurant Config JSON"
-                            value={generatedPayload.config_json}
-                          />
-                          <PreviewEditorCard title="Policy JSON" value={generatedPayload.policy_json} />
-                          <PreviewEditorCard title="Arrivals CSV" value={generatedPayload.arrivals_csv} />
-                        </div>
-                      </details>
-                    ) : null}
                   </div>
 
-                  <aside className="builder-sidebar">
-                    <div className="builder-summary-card">
-                      <p className="eyebrow">Launch Deck</p>
-                      <h3>{customForm.scenarioName}</h3>
-                      <p className="muted">{builderSummary}</p>
-                      <div className="builder-summary-grid">
-                        {builderSnapshot.map((item) => (
-                          <InfoTile
-                            key={item.label}
-                            label={item.label}
-                            value={item.value}
-                            caption="Scenario module"
-                            compact
-                          />
-                        ))}
-                      </div>
-                      <button
-                        type="button"
-                        className="primary wide-button"
-                        onClick={() => void handleRunCustom()}
-                        disabled={customLoading || !generatedPayload}
-                      >
-                        {customLoading ? 'Simulating live scenario...' : 'Run custom simulation'}
-                      </button>
-                    </div>
+                  <div className="compare-builder-grid">
+                    <ComparisonOptionCard
+                      side="A"
+                      form={customForms.A}
+                      presets={builderPresets}
+                      onFieldChange={updateCustomField}
+                      onReservationPresetChange={handleReservationPresetChange}
+                    />
+                    <ComparisonOptionCard
+                      side="B"
+                      form={customForms.B}
+                      presets={builderPresets}
+                      onFieldChange={updateCustomField}
+                      onReservationPresetChange={handleReservationPresetChange}
+                    />
+                  </div>
 
-                    <div className="builder-summary-card secondary">
-                      <p className="eyebrow">Production Wiring</p>
-                      <h3>Fixed Public Endpoints</h3>
-                      <div className="endpoint-list">
-                        <div className="endpoint-row">
-                          <span>Dashboard</span>
-                          <code>{extractHost(PRODUCTION_FRONTEND_URL)}</code>
-                        </div>
-                        <div className="endpoint-row">
-                          <span>API</span>
-                          <code>{extractHost(PRODUCTION_BACKEND_URL)}</code>
-                        </div>
-                      </div>
-                      <p className="muted">
-                        Keep these Render service names unchanged and these `.onrender.com` URLs stay
-                        as your fixed public entry points.
-                      </p>
-                    </div>
-                  </aside>
+                  <div className="compare-summary-grid">
+                    <CustomOptionSummaryCard
+                      side="A"
+                      title={customForms.A.scenarioName}
+                      summary={customOptionSummaries.A}
+                      snapshot={customOptionSnapshots.A}
+                    />
+                    <CustomOptionSummaryCard
+                      side="B"
+                      title={customForms.B.scenarioName}
+                      summary={customOptionSummaries.B}
+                      snapshot={customOptionSnapshots.B}
+                    />
+                  </div>
+
+                  <div className="builder-summary-card compare-action-card">
+                    <p className="eyebrow">Run Comparison</p>
+                    <h3>Compare Option A with Option B</h3>
+                    <p className="muted">
+                      Both options are simulated separately, then every difference below is shown as
+                      Option B minus Option A.
+                    </p>
+                    <button
+                      type="button"
+                      className="primary wide-button"
+                      onClick={() => void handleRunCustom()}
+                      disabled={customLoading || !generatedPayloads}
+                    >
+                      {customLoading
+                        ? 'Comparing Option A and Option B...'
+                        : 'Compare Option A and Option B'}
+                    </button>
+                  </div>
                 </div>
 
-                {customResult ? (
+                {customPairResult ? (
                   <section className="result-shell">
                     <div className="section-head">
                       <div>
-                        <p className="eyebrow">Simulation Result</p>
-                        <h3>{customResult.scenario_name}</h3>
+                        <p className="eyebrow">Custom Comparison Result</p>
+                        <h3>
+                          {starterCase
+                            ? `${formatCaseStudyTitle(starterCase.title)} custom comparison`
+                            : 'Custom option comparison'}
+                        </h3>
                       </div>
-                      <StatusChip tone="positive">Run complete</StatusChip>
+                      <StatusChip tone="positive">Comparison ready</StatusChip>
                     </div>
 
-                    <MetricsGrid metrics={customResult.metrics} />
+                    <CustomComparisonSetupCard rows={customComparisonRows} />
 
-                    <div className="analysis-grid analysis-grid-result">
-                      <div className="chart-panel">
-                        <div className="chart-header">
-                          <div>
-                            <h3>Queue Pressure Timeline</h3>
-                            <p className="muted">
-                              Waiting groups over time for the current custom simulation.
-                            </p>
-                          </div>
-                        </div>
-                        <div className="chart-wrap">
-                          <ResponsiveContainer width="100%" height={340}>
-                            <AreaChart data={customResult.queue_snapshots}>
-                              <defs>
-                                <linearGradient id="queueAreaFill" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="0%" stopColor="#818cf8" stopOpacity={0.6} />
-                                  <stop offset="100%" stopColor="#22d3ee" stopOpacity={0.04} />
-                                </linearGradient>
-                              </defs>
-                              <CartesianGrid stroke={chartTheme.grid} vertical={false} />
-                              <XAxis
-                                dataKey="clock"
-                                minTickGap={24}
-                                stroke={chartTheme.grid}
-                                tick={{ fill: chartTheme.muted, fontSize: 12 }}
-                              />
-                              <YAxis
-                                allowDecimals={false}
-                                stroke={chartTheme.grid}
-                                tick={{ fill: chartTheme.muted, fontSize: 12 }}
-                              />
-                              <Tooltip
-                                contentStyle={{
-                                  background: chartTheme.tooltip,
-                                  border: `1px solid ${chartTheme.border}`,
-                                  borderRadius: 18,
-                                  boxShadow: '0 20px 42px rgba(2, 6, 23, 0.48)',
-                                }}
-                                labelStyle={{ color: chartTheme.text, fontWeight: 700 }}
-                                itemStyle={{ color: chartTheme.text }}
-                              />
-                              <Area
-                                type="monotone"
-                                dataKey="total_waiting"
-                                name="Waiting groups"
-                                stroke="#a78bfa"
-                                fill="url(#queueAreaFill)"
-                                strokeWidth={3}
-                              />
-                            </AreaChart>
-                          </ResponsiveContainer>
+                    <div className="metric-grid metric-grid-compact">
+                      <MetricCard
+                        label="Average wait with Option A"
+                        value={formatMetricValue(
+                          'average_wait_time',
+                          customPairResult.A.metrics.average_wait_time,
+                        )}
+                        caption={customPairResult.A.scenario_name}
+                        tone="blue"
+                      />
+                      <MetricCard
+                        label="Average wait with Option B"
+                        value={formatMetricValue(
+                          'average_wait_time',
+                          customPairResult.B.metrics.average_wait_time,
+                        )}
+                        caption={customPairResult.B.scenario_name}
+                        tone="teal"
+                      />
+                      <MetricCard
+                        label="Difference in parties seated"
+                        value={formatDelta(
+                          'groups_served',
+                          customPairResult.metric_deltas_b_minus_a.groups_served ?? 0,
+                        )}
+                        caption="Option B minus Option A"
+                        tone="purple"
+                      />
+                      <MetricCard
+                        label="Difference in dining room use"
+                        value={formatDelta(
+                          'table_utilization_overall',
+                          customPairResult.metric_deltas_b_minus_a.table_utilization_overall ?? 0,
+                        )}
+                        caption="Option B minus Option A"
+                        tone="amber"
+                      />
+                    </div>
+
+                    <MessageCard
+                      tone="neutral"
+                      message='"Difference" always means Option B minus Option A. A plus sign means the number is higher in B, a minus sign means it is lower, and percentage-based measures are shown in points.'
+                    />
+
+                    {customRunIntel ? (
+                      <div className="compare-takeaways-grid">
+                        <QuickTakeawaysCard
+                          title="Option A highlights"
+                          description={customPairResult.A.scenario_name}
+                          highlights={customRunIntel.A}
+                        />
+                        <QuickTakeawaysCard
+                          title="Option B highlights"
+                          description={customPairResult.B.scenario_name}
+                          highlights={customRunIntel.B}
+                        />
+                      </div>
+                    ) : null}
+
+                    <div className="chart-panel">
+                      <div className="chart-header">
+                        <div>
+                          <h3>Guest experience side by side</h3>
+                          <p className="muted">
+                            Use this chart for a fast read on where the two custom options are most
+                            different.
+                          </p>
                         </div>
                       </div>
-
-                      <RunIntelCard result={customResult} highlights={runIntel} />
+                      <div className="chart-wrap">
+                        <ResponsiveContainer width="100%" height={320}>
+                          <BarChart data={customComparisonChartData} barGap={10}>
+                            <defs>
+                              <linearGradient id="customBarA" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#67e8f9" />
+                                <stop offset="100%" stopColor="#2563eb" />
+                              </linearGradient>
+                              <linearGradient id="customBarB" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#6ee7b7" />
+                                <stop offset="100%" stopColor="#14b8a6" />
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid stroke={chartTheme.grid} vertical={false} />
+                            <XAxis
+                              dataKey="metric"
+                              angle={0}
+                              textAnchor="middle"
+                              interval={0}
+                              tickMargin={12}
+                              height={56}
+                              stroke={chartTheme.grid}
+                              tick={{ fill: chartTheme.muted, fontSize: 11 }}
+                            />
+                            <YAxis
+                              stroke={chartTheme.grid}
+                              tick={{ fill: chartTheme.muted, fontSize: 11 }}
+                            />
+                            <Tooltip
+                              contentStyle={{
+                                background: chartTheme.tooltip,
+                                border: `1px solid ${chartTheme.border}`,
+                                borderRadius: 18,
+                                boxShadow: '0 20px 42px rgba(2, 6, 23, 0.48)',
+                              }}
+                              labelStyle={{ color: chartTheme.text, fontWeight: 700 }}
+                              itemStyle={{ color: chartTheme.text }}
+                            />
+                            <Legend
+                              wrapperStyle={{ color: chartTheme.text, paddingTop: 16 }}
+                              formatter={(value) => (
+                                <span style={{ color: chartTheme.text }}>{value}</span>
+                              )}
+                            />
+                            <Bar
+                              name="Option A"
+                              dataKey="A"
+                              fill="url(#customBarA)"
+                              radius={[10, 10, 0, 0]}
+                              maxBarSize={44}
+                            />
+                            <Bar
+                              name="Option B"
+                              dataKey="B"
+                              fill="url(#customBarB)"
+                              radius={[10, 10, 0, 0]}
+                              maxBarSize={44}
+                            />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
                     </div>
 
-                    <div className="two-column">
-                      <TableSegmentsCard segments={customResult.table_segments} />
-                      <EventLogCard entries={customResult.event_log} />
-                    </div>
-
-                    <GroupOutcomeCard outcomes={customResult.group_outcomes} />
+                    <MetricComparisonTable result={customPairResult} />
                   </section>
                 ) : (
                   <EmptyState
-                    title="No custom run yet"
-                    message="Adjust the guided modules above, then run the simulator to inspect the outcome."
+                    title="No comparison yet"
+                    message='Load or edit both options, then choose "Compare Option A and Option B" to see both results and the difference.'
                   />
                 )}
               </>
             )}
           </section>
         )}
-
-        <details className="panel reference-panel">
-          <summary>Schema reference and validation notes</summary>
-          <p className="muted">
-            Keep this section collapsed during normal analysis. Open it when you want to inspect the
-            backend field contracts and raw validation notes.
-          </p>
-          <div className="schema-grid">
-            {Object.entries(schemas).map(([name, content]) => (
-              <details key={name} className="schema-card">
-                <summary>{name}</summary>
-                <pre>{content}</pre>
-              </details>
-            ))}
-          </div>
-        </details>
       </main>
     </div>
   )
 }
 
-function MetricsGrid({ metrics }: { metrics: MetricsRecord }) {
+function ComparisonOptionCard({
+  side,
+  form,
+  presets,
+  onFieldChange,
+  onReservationPresetChange,
+}: {
+  side: BuilderSide
+  form: BuilderFormState
+  presets: BuilderPresetsResponse
+  onFieldChange: <Key extends keyof BuilderFormState>(
+    side: BuilderSide,
+    key: Key,
+    value: BuilderFormState[Key],
+  ) => void
+  onReservationPresetChange: (side: BuilderSide, nextId: string) => void
+}) {
+  const holdEnabled =
+    presets.reservation_policies.find((item) => item.id === form.reservationPolicyId)?.data
+      .hold_tables_for_reservations ?? false
+
   return (
-    <div className="metric-grid">
-      {summaryMetrics.map((metric) => (
-        <MetricCard
-          key={metric}
-          label={metricLabels[metric]}
-          value={formatMetricValue(metric, metrics[metric])}
-          caption={metricCaptions[metric] ?? 'Tracked operational metric.'}
+    <article className={`compare-option-card option-${side.toLowerCase()}`}>
+      <div className="compare-option-head">
+        <p className="eyebrow">Option {side}</p>
+        <h3>{side === 'A' ? 'First configuration' : 'Second configuration'}</h3>
+        <p className="muted">
+          {side === 'A'
+            ? 'Edit the first option in this comparison.'
+            : 'Edit the second option in this comparison.'}
+        </p>
+      </div>
+
+      <div className="compare-option-grid">
+        <InputField
+          label="Option name"
+          value={form.scenarioName}
+          onChange={(value) => onFieldChange(side, 'scenarioName', value)}
+          description="Choose a short name that makes this option easy to recognize."
         />
-      ))}
+        <InputField
+          label="Venue name"
+          value={form.restaurantName}
+          onChange={(value) => onFieldChange(side, 'restaurantName', value)}
+          description="The name shown for this dining room setup."
+        />
+        <InputField
+          label="Opens at"
+          type="time"
+          value={form.simulationStart}
+          onChange={(value) => onFieldChange(side, 'simulationStart', value)}
+          description="When guests can start joining the service window."
+        />
+        <InputField
+          label="Stops seating at"
+          type="time"
+          value={form.simulationEnd}
+          onChange={(value) => onFieldChange(side, 'simulationEnd', value)}
+          description="When the venue stops seating new parties."
+        />
+        <PresetField
+          label="Dining room layout"
+          value={form.restaurantLayoutId}
+          onChange={(value) => onFieldChange(side, 'restaurantLayoutId', value)}
+          options={presets.restaurant_layouts}
+        />
+        <PresetField
+          label="Waitlist style"
+          value={form.queueStructureId}
+          onChange={(value) => onFieldChange(side, 'queueStructureId', value)}
+          options={presets.queue_structures}
+        />
+        <PresetField
+          label="Booking handling"
+          value={form.reservationPolicyId}
+          onChange={(value) => onReservationPresetChange(side, value)}
+          options={presets.reservation_policies}
+        />
+        <NumberField
+          label="Hold time for bookings"
+          value={form.holdMinutes}
+          min={0}
+          disabled={!holdEnabled}
+          onChange={(value) => onFieldChange(side, 'holdMinutes', value)}
+          description="How long a booked table stays protected before it can be offered to someone else."
+        />
+        <PresetField
+          label="Table assignment style"
+          value={form.seatingPolicyId}
+          onChange={(value) => onFieldChange(side, 'seatingPolicyId', value)}
+          options={presets.seating_policies}
+        />
+        <PresetField
+          label="Table reset pace"
+          value={form.servicePolicyId}
+          onChange={(value) => onFieldChange(side, 'servicePolicyId', value)}
+          options={presets.service_policies}
+        />
+        <SelectField
+          label="Long-wait behaviour"
+          value={form.abandonmentEnabled ? 'enabled' : 'disabled'}
+          onChange={(value) => onFieldChange(side, 'abandonmentEnabled', value === 'enabled')}
+          options={[
+            {
+              id: 'disabled',
+              title: 'Parties stay on the waitlist',
+              description: 'Every party keeps waiting until they are seated or the venue closes.',
+            },
+            {
+              id: 'enabled',
+              title: 'Parties may leave',
+              description: 'Some parties may give up and leave if the wait grows too long.',
+            },
+          ]}
+        />
+        <PresetField
+          label="Arrival pattern"
+          value={form.arrivalScenarioId}
+          onChange={(value) => onFieldChange(side, 'arrivalScenarioId', value)}
+          options={presets.arrival_scenarios}
+          wide
+        />
+      </div>
+    </article>
+  )
+}
+
+function CustomOptionSummaryCard({
+  side,
+  title,
+  summary,
+  snapshot,
+}: {
+  side: BuilderSide
+  title: string
+  summary: string
+  snapshot: Array<{ label: string; value: string }>
+}) {
+  return (
+    <div className={`builder-summary-card compare-summary-card option-${side.toLowerCase()}`}>
+      <p className="eyebrow">Option {side}</p>
+      <h3>{title}</h3>
+      <p className="muted">{summary}</p>
+      <div className="builder-summary-grid">
+        {snapshot.map((item) => (
+          <InfoTile
+            key={`${side}-${item.label}`}
+            label={item.label}
+            value={item.value}
+            caption={`Option ${side}`}
+            compact
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function CustomComparisonSetupCard({ rows }: { rows: CaseStudyOverviewRow[] }) {
+  return (
+    <div className="table-card">
+      <div className="chart-header">
+        <div>
+          <h3>Current A/B setup</h3>
+          <p className="muted">
+            Review the two configurations before reading the outcome. Rows marked "Different" are
+            the settings that change between Option A and Option B.
+          </p>
+        </div>
+      </div>
+      <div className="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Configuration area</th>
+              <th>Option A</th>
+              <th>Option B</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.label}>
+                <td>{row.label}</td>
+                <td>{row.versionA}</td>
+                <td>{row.versionB}</td>
+                <td>
+                  <div className="table-note">
+                    <span className={row.changed ? 'table-chip changed' : 'table-chip same'}>
+                      {row.changed ? 'Different' : 'Matched'}
+                    </span>
+                    <span>
+                      {row.changed
+                        ? 'This setting changes between the two options.'
+                        : 'This setting stays the same in both options.'}
+                    </span>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+function PairOverviewTable({
+  title,
+  summary,
+  rows,
+  result,
+}: {
+  title: string
+  summary: string
+  rows: CaseStudyOverviewRow[]
+  result: PairComparison | null
+}) {
+  const highlightRow = rows.find((row) => row.changed) ?? rows[0]
+  const sharedRows = rows.filter((row) => !row.changed)
+  const summaryText =
+    summary.trim() ||
+    `This comparison keeps most of the service plan fixed while changing ${
+      highlightRow?.label.toLowerCase() ?? 'one main choice'
+    }.`
+
+  return (
+    <div className="table-card pair-overview-card">
+      <div className="pair-story-grid">
+        <div className="pair-story-copy">
+          <p className="eyebrow">Featured scenario</p>
+          <h3>{title}</h3>
+          <p className="muted pair-summary">{summaryText}</p>
+
+          {highlightRow ? (
+            <div className="pair-focus-grid">
+              <article className="pair-option-card option-a">
+                <span className="pair-option-label">Option A</span>
+                <strong>{highlightRow.versionA}</strong>
+                <span>{highlightRow.label}</span>
+              </article>
+              <article className="pair-option-card option-b">
+                <span className="pair-option-label">Option B</span>
+                <strong>{highlightRow.versionB}</strong>
+                <span>{highlightRow.label}</span>
+              </article>
+            </div>
+          ) : null}
+
+          {sharedRows.length ? (
+            <div className="pair-shared-block">
+              <span className="pair-shared-title">Everything else stays matched</span>
+              <div className="tag-row">
+                {sharedRows.map((row) => (
+                  <span key={row.label} className="tag-chip">
+                    {row.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+        <PairAtAGlanceCard result={result} />
+      </div>
+
+      <div className="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Experience area</th>
+              <th>Option A</th>
+              <th>Option B</th>
+              <th>Why it matters</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.label}>
+                <td>{row.label}</td>
+                <td>{row.versionA}</td>
+                <td>{row.versionB}</td>
+                <td>
+                  <div className="table-note">
+                    <span className={row.changed ? 'table-chip changed' : 'table-chip same'}>
+                      {row.changed ? 'Main difference' : 'Held steady'}
+                    </span>
+                    <span>
+                      {row.changed
+                        ? 'This is the service choice being tested between the two options.'
+                        : 'This part stays the same so the effect of the main change is easier to read.'}
+                    </span>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+function PairAtAGlanceCard({ result }: { result: PairComparison | null }) {
+  if (!result) {
+    return (
+      <div className="pair-glance-card">
+        <p className="eyebrow">Quick visual read</p>
+        <h4>Run the comparison to preview the shift</h4>
+        <p className="muted">
+          You will see how wait time, seated parties, and dining room use move between the two
+          options.
+        </p>
+      </div>
+    )
+  }
+
+  const previewRows = buildPairPreviewRows(result)
+
+  return (
+    <div className="pair-glance-card">
+      <p className="eyebrow">Quick visual read</p>
+      <h4>If you switch to Option B</h4>
+      <p className="muted">
+        Longer bars mean larger numbers. Use the note under each row to judge whether larger or
+        smaller usually feels better for guests.
+      </p>
+
+      <div className="pair-mini-chart">
+        {previewRows.map((row) => (
+          <div key={row.metric} className="pair-chart-row">
+            <div className="pair-chart-head">
+              <strong>{row.label}</strong>
+              <span>{row.hint}</span>
+            </div>
+
+            <div className="pair-bar-line">
+              <span className="pair-bar-label">A</span>
+              <div className="pair-bar-track">
+                <span className="pair-bar-fill option-a" style={{ width: row.widthA }} />
+              </div>
+              <span className="pair-bar-value">{row.valueA}</span>
+            </div>
+
+            <div className="pair-bar-line">
+              <span className="pair-bar-label">B</span>
+              <div className="pair-bar-track">
+                <span className="pair-bar-fill option-b" style={{ width: row.widthB }} />
+              </div>
+              <span className="pair-bar-value">{row.valueB}</span>
+            </div>
+
+            <div className={`pair-difference-note ${row.tone}`}>
+              Difference if you switch to B: {row.difference}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -1256,18 +1392,22 @@ function MetricComparisonTable({ result }: { result: PairComparison }) {
     <div className="table-card">
       <div className="chart-header">
         <div>
-          <h3>Metric Table</h3>
-          <p className="muted">Direct Version A vs Version B comparison with delta coloring.</p>
+          <h3>Detailed comparison</h3>
+          <p className="muted">
+            Use this table when you want to compare both options one guest-experience measure at a
+            time.
+          </p>
         </div>
       </div>
       <div className="table-scroll">
         <table>
           <thead>
             <tr>
-              <th>Metric</th>
-              <th>Version A</th>
-              <th>Version B</th>
-              <th>Delta</th>
+              <th>Guest experience measure</th>
+              <th>Usually better when</th>
+              <th>Option A</th>
+              <th>Option B</th>
+              <th>Difference if you switch to B</th>
             </tr>
           </thead>
           <tbody>
@@ -1277,6 +1417,7 @@ function MetricComparisonTable({ result }: { result: PairComparison }) {
               return (
                 <tr key={metric}>
                   <td>{metricLabels[metric]}</td>
+                  <td>{metricDirectionHint(metric)}</td>
                   <td>{formatMetricValue(metric, result.A.metrics[metric])}</td>
                   <td>{formatMetricValue(metric, result.B.metrics[metric])}</td>
                   <td className={`delta-cell ${tone}`}>{formatDelta(metric, delta)}</td>
@@ -1290,21 +1431,21 @@ function MetricComparisonTable({ result }: { result: PairComparison }) {
   )
 }
 
-function RunIntelCard({
-  result,
+function QuickTakeawaysCard({
+  title = 'What stands out',
+  description = 'A few fast ways to read the overall feel of this service plan.',
   highlights,
 }: {
-  result: ScenarioResult
+  title?: string
+  description?: string
   highlights: { metric: NumericMetricKey; label: string; value: string; tone: SignalTone; caption: string }[]
 }) {
   return (
     <div className="table-card highlights-card">
       <div className="chart-header">
         <div>
-          <h3>Run Intelligence</h3>
-          <p className="muted">
-            Operational quality markers and the generated source files behind this run.
-          </p>
+          <h3>{title}</h3>
+          <p className="muted">{description}</p>
         </div>
       </div>
 
@@ -1318,137 +1459,6 @@ function RunIntelCard({
             <span className="signal-value">{item.value}</span>
           </div>
         ))}
-      </div>
-
-      <div className="source-grid">
-        {Object.entries(result.source_paths).map(([name, path]) => (
-          <div key={name} className="source-row">
-            <span>{titleCaseKey(name)}</span>
-            <code>{path}</code>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function TableSegmentsCard({ segments }: { segments: ScenarioResult['table_segments'] }) {
-  const preview = segments.slice(0, 20)
-  return (
-    <div className="table-card">
-      <div className="chart-header">
-        <div>
-          <h3>Table Activity</h3>
-          <p className="muted">First 20 occupied or reset segments from the current custom run.</p>
-        </div>
-      </div>
-      <div className="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>Table</th>
-              <th>Status</th>
-              <th>Start</th>
-              <th>End</th>
-              <th>Group</th>
-            </tr>
-          </thead>
-          <tbody>
-            {preview.map((segment) => (
-              <tr key={`${segment.table_id}-${segment.status}-${segment.start_minute}`}>
-                <td>{segment.table_id}</td>
-                <td>
-                  <span className={`pill ${statusTone(segment.status)}`}>{segment.status}</span>
-                </td>
-                <td>{segment.start_clock}</td>
-                <td>{segment.end_clock}</td>
-                <td>{segment.group_id ?? '--'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  )
-}
-
-function EventLogCard({ entries }: { entries: ScenarioResult['event_log'] }) {
-  const preview = entries.slice(0, 40)
-  return (
-    <div className="table-card">
-      <div className="chart-header">
-        <div>
-          <h3>Event Log</h3>
-          <p className="muted">First 40 discrete events from the custom simulation.</p>
-        </div>
-      </div>
-      <div className="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>Time</th>
-              <th>Type</th>
-              <th>Message</th>
-            </tr>
-          </thead>
-          <tbody>
-            {preview.map((entry, index) => (
-              <tr key={`${entry.minute}-${entry.event_type}-${index}`}>
-                <td>{entry.clock}</td>
-                <td>
-                  <span className={`pill ${statusTone(entry.event_type)}`}>{entry.event_type}</span>
-                </td>
-                <td>{entry.message}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  )
-}
-
-function GroupOutcomeCard({ outcomes }: { outcomes: GroupOutcome[] }) {
-  const preview = outcomes.slice(0, 24)
-  return (
-    <div className="table-card">
-      <div className="chart-header">
-        <div>
-          <h3>Group Outcomes</h3>
-          <p className="muted">First 24 groups from the custom scenario.</p>
-        </div>
-      </div>
-      <div className="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>Group</th>
-              <th>Status</th>
-              <th>Type</th>
-              <th>Size</th>
-              <th>Wait</th>
-              <th>Table</th>
-              <th>Arrival</th>
-              <th>Seated</th>
-            </tr>
-          </thead>
-          <tbody>
-            {preview.map((group) => (
-              <tr key={group.group_id}>
-                <td>{group.group_id}</td>
-                <td>
-                  <span className={`pill ${statusTone(group.status)}`}>{group.status}</span>
-                </td>
-                <td>{group.group_type}</td>
-                <td>{group.group_size}</td>
-                <td>{group.wait_time ?? '--'}</td>
-                <td>{group.assigned_table_id ?? '--'}</td>
-                <td>{group.arrival_time}</td>
-                <td>{group.seated_time ?? '--'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
       </div>
     </div>
   )
@@ -1496,26 +1506,6 @@ function InfoTile({
   )
 }
 
-function SignalCard({
-  label,
-  value,
-  caption,
-  tone,
-}: {
-  label: string
-  value: string
-  caption: string
-  tone: SignalTone
-}) {
-  return (
-    <article className={`signal-card ${tone}`}>
-      <span className="signal-label">{label}</span>
-      <strong className="signal-hero">{value}</strong>
-      <span className="signal-caption">{caption}</span>
-    </article>
-  )
-}
-
 function StatusChip({
   tone,
   children,
@@ -1551,7 +1541,7 @@ function PresetField<T extends { id: string; title: string; description: string 
         ))}
       </select>
       <p className="builder-help">
-        {selected?.description || 'Choose the preset that best matches your scenario.'}
+        {selected?.description || 'Choose the option that best fits your scenario.'}
       </p>
     </label>
   )
@@ -1651,15 +1641,6 @@ function ActionField({
       <div className="builder-action">{children}</div>
       <p className="builder-help">{description}</p>
     </div>
-  )
-}
-
-function PreviewEditorCard({ title, value }: { title: string; value: string }) {
-  return (
-    <label className="editor-card">
-      <span>{title}</span>
-      <textarea value={value} readOnly spellCheck={false} />
-    </label>
   )
 }
 

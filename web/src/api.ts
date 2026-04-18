@@ -13,26 +13,62 @@ const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.
   '',
 ) ?? 'http://127.0.0.1:8000'
 
+const technicalErrorPattern =
+  /(http:\/\/|https:\/\/|127\.0\.0\.1|localhost|api|exception|traceback|stack|vite_|failed to fetch)/i
+
+function sanitizeErrorMessage(message: string) {
+  const trimmed = message.trim()
+  if (!trimmed || technicalErrorPattern.test(trimmed)) {
+    return null
+  }
+  return trimmed
+}
+
+function userFacingError(status: number, detail?: string) {
+  const safeDetail = detail ? sanitizeErrorMessage(detail) : null
+
+  if (status === 404) {
+    return safeDetail ?? 'That scenario is not available right now.'
+  }
+
+  if (status === 400) {
+    return safeDetail ?? 'We could not use that setup. Please adjust the plan and try again.'
+  }
+
+  if (status >= 500) {
+    return 'The service planner ran into a problem. Please try again in a moment.'
+  }
+
+  return safeDetail ?? 'Something went wrong while loading this screen. Please try again.'
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(init?.headers ?? {}),
-    },
-    ...init,
-  })
+  let response: Response
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(init?.headers ?? {}),
+      },
+      ...init,
+    })
+  } catch {
+    throw new Error(
+      'We could not reach the service planner right now. Please check your connection and try again.',
+    )
+  }
 
   if (!response.ok) {
-    let message = `${response.status} ${response.statusText}`
+    let detail: string | undefined
     try {
       const payload = (await response.json()) as { detail?: string }
       if (payload.detail) {
-        message = payload.detail
+        detail = payload.detail
       }
     } catch {
       // Ignore JSON parsing errors and use the status text.
     }
-    throw new Error(message)
+    throw new Error(userFacingError(response.status, detail ?? response.statusText))
   }
 
   return (await response.json()) as T

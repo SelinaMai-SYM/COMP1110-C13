@@ -1,6 +1,8 @@
 import type {
   BuilderFormState,
   BuilderPresetsResponse,
+  CaseStudyMetadata,
+  CaseStudyStarterVersion,
   CsvPreset,
   CustomScenarioPayload,
   JsonPreset,
@@ -24,150 +26,22 @@ type StarterPreset = Pick<
   | 'abandonmentEnabled'
 >
 
+export interface CaseStudyOverviewRow {
+  label: string
+  versionA: string
+  versionB: string
+  changed: boolean
+}
+
 const FALLBACK_STARTER: StarterPreset = {
-  restaurantLayoutId: 'restaurant_base',
-  queueStructureId: 'restaurant_multi_queue',
+  restaurantLayoutId: 'layout_family_trattoria',
+  queueStructureId: 'queue_balanced_size',
   reservationPolicyId: 'reservation_enabled',
   seatingPolicyId: 'seating_fcfs',
   servicePolicyId: 'service_default',
   arrivalScenarioId: 'dinner_peak_base',
   holdMinutes: 10,
   abandonmentEnabled: false,
-}
-
-const STARTER_PRESETS: Record<string, Record<StarterVersion, StarterPreset>> = {
-  pair_01_table_mix: {
-    A: {
-      restaurantLayoutId: 'restaurant_small_tables',
-      queueStructureId: 'restaurant_multi_queue',
-      reservationPolicyId: 'reservation_enabled',
-      seatingPolicyId: 'seating_fcfs',
-      servicePolicyId: 'service_default',
-      arrivalScenarioId: 'large_party_heavy_base',
-      holdMinutes: 10,
-      abandonmentEnabled: false,
-    },
-    B: {
-      restaurantLayoutId: 'restaurant_large_tables',
-      queueStructureId: 'restaurant_multi_queue',
-      reservationPolicyId: 'reservation_enabled',
-      seatingPolicyId: 'seating_fcfs',
-      servicePolicyId: 'service_default',
-      arrivalScenarioId: 'large_party_heavy_base',
-      holdMinutes: 10,
-      abandonmentEnabled: false,
-    },
-  },
-  pair_02_single_vs_multi_queue: {
-    A: {
-      restaurantLayoutId: 'restaurant_base',
-      queueStructureId: 'restaurant_single_queue',
-      reservationPolicyId: 'reservation_enabled',
-      seatingPolicyId: 'seating_fcfs',
-      servicePolicyId: 'service_default',
-      arrivalScenarioId: 'lunch_rush_base',
-      holdMinutes: 10,
-      abandonmentEnabled: false,
-    },
-    B: {
-      restaurantLayoutId: 'restaurant_base',
-      queueStructureId: 'restaurant_multi_queue',
-      reservationPolicyId: 'reservation_enabled',
-      seatingPolicyId: 'seating_fcfs',
-      servicePolicyId: 'service_default',
-      arrivalScenarioId: 'lunch_rush_base',
-      holdMinutes: 10,
-      abandonmentEnabled: false,
-    },
-  },
-  pair_03_coarse_vs_fine_queue: {
-    A: {
-      restaurantLayoutId: 'restaurant_base',
-      queueStructureId: 'restaurant_coarse_queue',
-      reservationPolicyId: 'reservation_enabled',
-      seatingPolicyId: 'seating_fcfs',
-      servicePolicyId: 'service_default',
-      arrivalScenarioId: 'dinner_peak_base',
-      holdMinutes: 10,
-      abandonmentEnabled: false,
-    },
-    B: {
-      restaurantLayoutId: 'restaurant_base',
-      queueStructureId: 'restaurant_fine_queue',
-      reservationPolicyId: 'reservation_enabled',
-      seatingPolicyId: 'seating_fcfs',
-      servicePolicyId: 'service_default',
-      arrivalScenarioId: 'dinner_peak_base',
-      holdMinutes: 10,
-      abandonmentEnabled: false,
-    },
-  },
-  pair_04_no_reservation_hold_vs_hold: {
-    A: {
-      restaurantLayoutId: 'restaurant_base',
-      queueStructureId: 'restaurant_multi_queue',
-      reservationPolicyId: 'reservation_disabled',
-      seatingPolicyId: 'seating_fcfs',
-      servicePolicyId: 'service_default',
-      arrivalScenarioId: 'reservation_mixed_base',
-      holdMinutes: 0,
-      abandonmentEnabled: false,
-    },
-    B: {
-      restaurantLayoutId: 'restaurant_base',
-      queueStructureId: 'restaurant_multi_queue',
-      reservationPolicyId: 'reservation_enabled',
-      seatingPolicyId: 'seating_fcfs',
-      servicePolicyId: 'service_default',
-      arrivalScenarioId: 'reservation_mixed_base',
-      holdMinutes: 10,
-      abandonmentEnabled: false,
-    },
-  },
-  pair_05_low_vs_high_cleaning_capacity: {
-    A: {
-      restaurantLayoutId: 'restaurant_base',
-      queueStructureId: 'restaurant_multi_queue',
-      reservationPolicyId: 'reservation_enabled',
-      seatingPolicyId: 'seating_fcfs',
-      servicePolicyId: 'service_low_cleaning_capacity',
-      arrivalScenarioId: 'dinner_peak_base',
-      holdMinutes: 10,
-      abandonmentEnabled: false,
-    },
-    B: {
-      restaurantLayoutId: 'restaurant_base',
-      queueStructureId: 'restaurant_multi_queue',
-      reservationPolicyId: 'reservation_enabled',
-      seatingPolicyId: 'seating_fcfs',
-      servicePolicyId: 'service_high_cleaning_capacity',
-      arrivalScenarioId: 'dinner_peak_base',
-      holdMinutes: 10,
-      abandonmentEnabled: false,
-    },
-  },
-  pair_06_no_abandonment_vs_abandonment: {
-    A: {
-      restaurantLayoutId: 'restaurant_base',
-      queueStructureId: 'restaurant_multi_queue',
-      reservationPolicyId: 'reservation_enabled',
-      seatingPolicyId: 'seating_fcfs',
-      servicePolicyId: 'service_default',
-      arrivalScenarioId: 'stress_peak_base',
-      holdMinutes: 10,
-      abandonmentEnabled: false,
-    },
-    B: {
-      restaurantLayoutId: 'restaurant_base',
-      queueStructureId: 'restaurant_multi_queue',
-      reservationPolicyId: 'reservation_enabled',
-      seatingPolicyId: 'seating_fcfs',
-      servicePolicyId: 'service_default',
-      arrivalScenarioId: 'stress_peak_base',
-      holdMinutes: 10,
-      abandonmentEnabled: true,
-    },
-  },
 }
 
 function getPresetById<T extends { id: string }>(items: T[], id: string): T {
@@ -178,8 +52,33 @@ function getPresetById<T extends { id: string }>(items: T[], id: string): T {
   return match
 }
 
-function customScenarioName(caseStudy: string, version: StarterVersion) {
-  return `${caseStudy}_${version}_custom`
+function simplifyPresetTitle(title: string) {
+  return title.trim()
+}
+
+function describeReservationHandling(
+  preset: JsonPreset<ReservationPolicyPresetData>,
+  holdMinutes: number,
+) {
+  if (!preset.data.hold_tables_for_reservations) {
+    return 'Tables return to the floor immediately if booked guests have not arrived'
+  }
+  return `Booked tables stay protected for ${holdMinutes} minutes`
+}
+
+function describeWalkAwaySetting(enabled: boolean) {
+  return enabled ? 'Parties may leave after a long wait' : 'Parties stay on the waitlist until seated'
+}
+
+function normalizeCaseStudyTitle(caseStudy: CaseStudyMetadata | null | undefined) {
+  if (!caseStudy) {
+    return 'Custom Scenario'
+  }
+  return caseStudy.title.replace(/^Pair\s+\d+\s*:\s*/i, '').trim() || 'Custom Scenario'
+}
+
+function customScenarioName(caseStudy: CaseStudyMetadata | null | undefined, version: StarterVersion) {
+  return `${normalizeCaseStudyTitle(caseStudy)} custom plan from Option ${version}`
 }
 
 function nextNotes(
@@ -207,21 +106,50 @@ function servicePolicyName(baseName: string, abandonmentEnabled: boolean) {
   return `${baseName} with Abandonment`
 }
 
+function starterVersion(
+  caseStudy: CaseStudyMetadata | null | undefined,
+  version: StarterVersion,
+): CaseStudyStarterVersion | null {
+  return caseStudy?.starter_versions?.[version] ?? null
+}
+
+function normalizeStarter(
+  caseStudy: CaseStudyMetadata | null | undefined,
+  version: StarterVersion,
+): StarterPreset {
+  const starter = starterVersion(caseStudy, version)
+  if (!starter) {
+    return FALLBACK_STARTER
+  }
+  return {
+    restaurantLayoutId: starter.restaurant_layout_id,
+    queueStructureId: starter.queue_structure_id,
+    reservationPolicyId: starter.reservation_policy_id,
+    seatingPolicyId: starter.seating_policy_id,
+    servicePolicyId: starter.service_policy_id,
+    arrivalScenarioId: starter.arrival_scenario_id,
+    holdMinutes: starter.hold_minutes,
+    abandonmentEnabled: starter.abandonment_enabled,
+  }
+}
+
 export function buildFormFromStarter(
-  caseStudy: string,
+  caseStudy: CaseStudyMetadata | null | undefined,
   version: StarterVersion,
   presets: BuilderPresetsResponse,
 ): BuilderFormState {
-  const starter = STARTER_PRESETS[caseStudy]?.[version] ?? FALLBACK_STARTER
+  const starter = normalizeStarter(caseStudy, version)
+  const starterMeta = starterVersion(caseStudy, version)
   const layout =
     presets.restaurant_layouts.find((item) => item.id === starter.restaurantLayoutId) ??
     presets.restaurant_layouts[0]
 
   return {
     scenarioName: customScenarioName(caseStudy, version),
-    restaurantName: layout?.data.restaurant_name ?? 'Custom Restaurant Scenario',
-    simulationStart: layout?.data.simulation_start ?? '11:30',
-    simulationEnd: layout?.data.simulation_end ?? '22:00',
+    restaurantName:
+      starterMeta?.restaurant_name?.trim() || layout?.data.restaurant_name || 'My Restaurant Plan',
+    simulationStart: layout?.data.simulation_start ?? '11:00',
+    simulationEnd: layout?.data.simulation_end ?? '22:30',
     restaurantLayoutId: starter.restaurantLayoutId,
     queueStructureId: starter.queueStructureId,
     reservationPolicyId: starter.reservationPolicyId,
@@ -238,18 +166,98 @@ export function summarizeBuilderSelections(
   presets: BuilderPresetsResponse,
 ): string {
   const reservation = getPresetById(presets.reservation_policies, form.reservationPolicyId)
-  const parts = [
+  const layoutTitle = simplifyPresetTitle(
     getPresetById(presets.restaurant_layouts, form.restaurantLayoutId).title,
+  )
+  const queueTitle = simplifyPresetTitle(
     getPresetById(presets.queue_structures, form.queueStructureId).title,
-    reservation.data.hold_tables_for_reservations
-      ? `reservation hold ${form.holdMinutes} min`
-      : 'reservation hold off',
-    getPresetById(presets.seating_policies, form.seatingPolicyId).title,
+  )
+  const seatingTitle = getPresetById(presets.seating_policies, form.seatingPolicyId).title
+  const serviceTitle = simplifyPresetTitle(
     getPresetById(presets.service_policies, form.servicePolicyId).title,
-    form.abandonmentEnabled ? 'abandonment enabled' : 'abandonment disabled',
-    getPresetById(presets.arrival_scenarios, form.arrivalScenarioId).title,
+  )
+  const arrivalsTitle = getPresetById(presets.arrival_scenarios, form.arrivalScenarioId).title
+  const parts = [
+    `${layoutTitle} dining room`,
+    queueTitle,
+    reservation.data.hold_tables_for_reservations
+      ? `booked tables protected for ${form.holdMinutes} minutes`
+      : 'no table protection for bookings',
+    seatingTitle,
+    serviceTitle,
+    form.abandonmentEnabled ? 'parties may leave after a long wait' : 'parties stay on the waitlist',
+    `${arrivalsTitle} arrival pattern`,
   ]
-  return parts.join(' + ')
+  return `Built around a ${parts.join(', ')}.`
+}
+
+export function buildCaseStudyOverviewRows(
+  caseStudy: CaseStudyMetadata | null | undefined,
+  presets: BuilderPresetsResponse,
+): CaseStudyOverviewRow[] {
+  const starterA = normalizeStarter(caseStudy, 'A')
+  const starterB = normalizeStarter(caseStudy, 'B')
+
+  const layoutA = getPresetById(presets.restaurant_layouts, starterA.restaurantLayoutId)
+  const layoutB = getPresetById(presets.restaurant_layouts, starterB.restaurantLayoutId)
+  const queueA = getPresetById(presets.queue_structures, starterA.queueStructureId)
+  const queueB = getPresetById(presets.queue_structures, starterB.queueStructureId)
+  const reservationA = getPresetById(presets.reservation_policies, starterA.reservationPolicyId)
+  const reservationB = getPresetById(presets.reservation_policies, starterB.reservationPolicyId)
+  const seatingA = getPresetById(presets.seating_policies, starterA.seatingPolicyId)
+  const seatingB = getPresetById(presets.seating_policies, starterB.seatingPolicyId)
+  const serviceA = getPresetById(presets.service_policies, starterA.servicePolicyId)
+  const serviceB = getPresetById(presets.service_policies, starterB.servicePolicyId)
+  const arrivalsA = getPresetById(presets.arrival_scenarios, starterA.arrivalScenarioId)
+  const arrivalsB = getPresetById(presets.arrival_scenarios, starterB.arrivalScenarioId)
+
+  const rows: CaseStudyOverviewRow[] = [
+    {
+      label: 'Restaurant concept',
+      versionA: simplifyPresetTitle(layoutA.title),
+      versionB: simplifyPresetTitle(layoutB.title),
+      changed: layoutA.id !== layoutB.id,
+    },
+    {
+      label: 'Waitlist setup',
+      versionA: simplifyPresetTitle(queueA.title),
+      versionB: simplifyPresetTitle(queueB.title),
+      changed: queueA.id !== queueB.id,
+    },
+    {
+      label: 'Booking protection',
+      versionA: describeReservationHandling(reservationA, starterA.holdMinutes),
+      versionB: describeReservationHandling(reservationB, starterB.holdMinutes),
+      changed:
+        reservationA.id !== reservationB.id || starterA.holdMinutes !== starterB.holdMinutes,
+    },
+    {
+      label: 'Table assignment style',
+      versionA: seatingA.title,
+      versionB: seatingB.title,
+      changed: seatingA.id !== seatingB.id,
+    },
+    {
+      label: 'Table reset pace',
+      versionA: simplifyPresetTitle(serviceA.title),
+      versionB: simplifyPresetTitle(serviceB.title),
+      changed: serviceA.id !== serviceB.id,
+    },
+    {
+      label: 'Long-wait behaviour',
+      versionA: describeWalkAwaySetting(starterA.abandonmentEnabled),
+      versionB: describeWalkAwaySetting(starterB.abandonmentEnabled),
+      changed: starterA.abandonmentEnabled !== starterB.abandonmentEnabled,
+    },
+    {
+      label: 'Arrival pattern',
+      versionA: arrivalsA.title,
+      versionB: arrivalsB.title,
+      changed: arrivalsA.id !== arrivalsB.id,
+    },
+  ]
+
+  return rows.sort((left, right) => Number(right.changed) - Number(left.changed))
 }
 
 export function buildCustomScenarioPayload(
@@ -309,4 +317,92 @@ export function buildCustomScenarioPayload(
     policy_json: JSON.stringify(policyBundle, null, 2),
     arrivals_csv: arrivals.raw,
   }
+}
+
+export function buildCustomComparisonRows(
+  formA: BuilderFormState,
+  formB: BuilderFormState,
+  presets: BuilderPresetsResponse,
+): CaseStudyOverviewRow[] {
+  const layoutA = getPresetById(presets.restaurant_layouts, formA.restaurantLayoutId)
+  const layoutB = getPresetById(presets.restaurant_layouts, formB.restaurantLayoutId)
+  const queueA = getPresetById(presets.queue_structures, formA.queueStructureId)
+  const queueB = getPresetById(presets.queue_structures, formB.queueStructureId)
+  const reservationA = getPresetById(presets.reservation_policies, formA.reservationPolicyId)
+  const reservationB = getPresetById(presets.reservation_policies, formB.reservationPolicyId)
+  const seatingA = getPresetById(presets.seating_policies, formA.seatingPolicyId)
+  const seatingB = getPresetById(presets.seating_policies, formB.seatingPolicyId)
+  const serviceA = getPresetById(presets.service_policies, formA.servicePolicyId)
+  const serviceB = getPresetById(presets.service_policies, formB.servicePolicyId)
+  const arrivalsA = getPresetById(presets.arrival_scenarios, formA.arrivalScenarioId)
+  const arrivalsB = getPresetById(presets.arrival_scenarios, formB.arrivalScenarioId)
+
+  const rows: CaseStudyOverviewRow[] = [
+    {
+      label: 'Option name',
+      versionA: formA.scenarioName.trim() || 'Option A',
+      versionB: formB.scenarioName.trim() || 'Option B',
+      changed: formA.scenarioName.trim() !== formB.scenarioName.trim(),
+    },
+    {
+      label: 'Venue name',
+      versionA: formA.restaurantName.trim() || layoutA.data.restaurant_name,
+      versionB: formB.restaurantName.trim() || layoutB.data.restaurant_name,
+      changed:
+        (formA.restaurantName.trim() || layoutA.data.restaurant_name) !==
+        (formB.restaurantName.trim() || layoutB.data.restaurant_name),
+    },
+    {
+      label: 'Service window',
+      versionA: `${formA.simulationStart} to ${formA.simulationEnd}`,
+      versionB: `${formB.simulationStart} to ${formB.simulationEnd}`,
+      changed:
+        formA.simulationStart !== formB.simulationStart || formA.simulationEnd !== formB.simulationEnd,
+    },
+    {
+      label: 'Restaurant concept',
+      versionA: simplifyPresetTitle(layoutA.title),
+      versionB: simplifyPresetTitle(layoutB.title),
+      changed: layoutA.id !== layoutB.id,
+    },
+    {
+      label: 'Waitlist setup',
+      versionA: simplifyPresetTitle(queueA.title),
+      versionB: simplifyPresetTitle(queueB.title),
+      changed: queueA.id !== queueB.id,
+    },
+    {
+      label: 'Booking protection',
+      versionA: describeReservationHandling(reservationA, formA.holdMinutes),
+      versionB: describeReservationHandling(reservationB, formB.holdMinutes),
+      changed:
+        reservationA.id !== reservationB.id || formA.holdMinutes !== formB.holdMinutes,
+    },
+    {
+      label: 'Table assignment style',
+      versionA: seatingA.title,
+      versionB: seatingB.title,
+      changed: seatingA.id !== seatingB.id,
+    },
+    {
+      label: 'Table reset pace',
+      versionA: simplifyPresetTitle(serviceA.title),
+      versionB: simplifyPresetTitle(serviceB.title),
+      changed: serviceA.id !== serviceB.id,
+    },
+    {
+      label: 'Long-wait behaviour',
+      versionA: describeWalkAwaySetting(formA.abandonmentEnabled),
+      versionB: describeWalkAwaySetting(formB.abandonmentEnabled),
+      changed: formA.abandonmentEnabled !== formB.abandonmentEnabled,
+    },
+    {
+      label: 'Arrival pattern',
+      versionA: arrivalsA.title,
+      versionB: arrivalsB.title,
+      changed: arrivalsA.id !== arrivalsB.id,
+    },
+  ]
+
+  return rows.sort((left, right) => Number(right.changed) - Number(left.changed))
 }
