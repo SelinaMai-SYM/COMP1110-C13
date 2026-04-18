@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from dataclasses import asdict
 from pathlib import Path
 from typing import Literal
 
@@ -66,7 +67,7 @@ def healthcheck() -> dict[str, str]:
 
 @app.get("/case-studies")
 def list_case_studies() -> dict[str, object]:
-    case_studies = [metadata.__dict__ for metadata in discover_case_studies(data_root=_data_root())]
+    case_studies = [asdict(metadata) for metadata in discover_case_studies(data_root=_data_root())]
     return {"case_studies": case_studies}
 
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import csv
 import json
 from io import StringIO
@@ -8,6 +9,7 @@ from typing import Any, Callable
 
 from .models import (
     ArrivalGroup,
+    CaseStudyStarterVersion,
     CaseStudyMetadata,
     DefaultResetPolicy,
     GroupType,
@@ -342,17 +344,16 @@ def load_case_study(
     *,
     data_root: str | Path | None = None,
 ) -> ScenarioDefinition:
-    config_path, arrivals_path, policy_path = case_study_input_paths(
-        case_study,
-        version,
-        data_root=data_root,
-    )
-    normalized_version = version.upper()
-    return load_scenario_paths(
-        config_path,
-        arrivals_path,
-        policy_path,
-        scenario_name=f"{case_study}_{normalized_version}",
+    resolved = _resolve_case_study_payloads(case_study, version, data_root=data_root)
+    config = _load_config(json.loads(resolved["config_json"]))
+    policy = _load_policy(json.loads(resolved["policy_json"]), config)
+    arrivals = _load_arrivals_from_text(resolved["arrivals_csv"], config)
+    return ScenarioDefinition(
+        scenario_name=resolved["scenario_name"],
+        config=config,
+        arrivals=arrivals,
+        policy=policy,
+        source_paths=resolved["source_paths"],
     )
 
 
@@ -379,32 +380,315 @@ def load_custom_scenario(
     )
 
 
+def _normalize_case_study_version(version: str) -> str:
+    normalized_version = version.upper()
+    if normalized_version not in {"A", "B"}:
+        raise ValueError(f"Unsupported case study version: {version!r}")
+    return normalized_version
+
+
+def _read_case_study_readme(case_dir: Path) -> tuple[str, str]:
+    readme_path = case_dir / "README.md"
+    if not readme_path.exists():
+        return case_dir.name, ""
+    lines = [line.strip() for line in readme_path.read_text(encoding="utf-8").splitlines()]
+    non_empty = [line for line in lines if line]
+    if not non_empty:
+        return case_dir.name, ""
+    title = non_empty[0].lstrip("# ").strip()
+    summary = non_empty[1] if len(non_empty) > 1 else ""
+    return title, summary
+
+
+def _case_study_manifest_path(root: Path, case_study: str) -> Path:
+    return root / "case_studies" / case_study / "case_study.json"
+
+
+def _load_case_study_manifest(
+    case_study: str,
+    *,
+    data_root: str | Path | None = None,
+) -> tuple[dict[str, Any], Path]:
+    root = Path(data_root) if data_root else DATA_ROOT
+    manifest_path = _case_study_manifest_path(root, case_study)
+    if not manifest_path.exists():
+        raise FileNotFoundError(f"Missing case study manifest: {manifest_path}")
+    raw = _load_json_file(manifest_path)
+    _require_keys(raw, ["title", "summary", "focus_label", "versions"], "case study manifest")
+    return raw, manifest_path
+
+
+def _starter_version_from_manifest(raw: dict[str, Any]) -> CaseStudyStarterVersion:
+    _require_keys(
+        raw,
+        [
+            "label",
+            "restaurant_layout_id",
+            "queue_structure_id",
+            "reservation_policy_id",
+            "seating_policy_id",
+            "service_policy_id",
+            "arrival_scenario_id",
+            "hold_minutes",
+            "abandonment_enabled",
+        ],
+        "case study starter version",
+    )
+    restaurant_name_raw = str(raw.get("restaurant_name", "")).strip()
+    return CaseStudyStarterVersion(
+        label=str(raw["label"]),
+        restaurant_layout_id=str(raw["restaurant_layout_id"]),
+        queue_structure_id=str(raw["queue_structure_id"]),
+        reservation_policy_id=str(raw["reservation_policy_id"]),
+        seating_policy_id=str(raw["seating_policy_id"]),
+        service_policy_id=str(raw["service_policy_id"]),
+        arrival_scenario_id=str(raw["arrival_scenario_id"]),
+        hold_minutes=int(raw["hold_minutes"]),
+        abandonment_enabled=bool(raw["abandonment_enabled"]),
+        restaurant_name=restaurant_name_raw or None,
+        notes=str(raw.get("notes", "")).strip(),
+    )
+
+
+def _manifest_starter_version(manifest: dict[str, Any], version: str) -> CaseStudyStarterVersion:
+    normalized_version = _normalize_case_study_version(version)
+    versions_raw = manifest.get("versions", {})
+    if not isinstance(versions_raw, dict) or normalized_version not in versions_raw:
+        raise ValueError(f"Case study is missing version {normalized_version}.")
+    starter_raw = versions_raw[normalized_version]
+    if not isinstance(starter_raw, dict):
+        raise ValueError(f"Case study version {normalized_version} must be an object.")
+    return _starter_version_from_manifest(starter_raw)
+
+
+def _strip_preset_metadata(payload: dict[str, Any]) -> dict[str, Any]:
+    cleaned = copy.deepcopy(payload)
+    for key in ["preset_id", "preset_family", "preset_order"]:
+        cleaned.pop(key, None)
+    return cleaned
+
+
+def _logical_preset_id(path: Path, payload: dict[str, Any]) -> str:
+    return str(payload.get("preset_id") or path.stem)
+
+
+def _logical_preset_order(payload: dict[str, Any]) -> int:
+    raw_order = payload.get("preset_order", 999)
+    try:
+        return int(raw_order)
+    except (TypeError, ValueError):
+        return 999
+
+
+def _restaurant_config_entries(
+    root: Path,
+    *,
+    family: str | None = None,
+) -> list[tuple[Path, dict[str, Any]]]:
+    entries: list[tuple[Path, dict[str, Any]]] = []
+    for path in sorted((root / "restaurant_configs").glob("*.json")):
+        payload = _load_json_file(path)
+        payload_family = str(payload.get("preset_family", "restaurant_layout"))
+        if family is not None and payload_family != family:
+            continue
+        entries.append((path, payload))
+    return sorted(
+        entries,
+        key=lambda item: (
+            _logical_preset_order(item[1]),
+            str(item[1].get("restaurant_name", item[0].stem)).lower(),
+        ),
+    )
+
+
+def _find_restaurant_config_preset(
+    root: Path,
+    preset_id: str,
+    *,
+    family: str,
+) -> tuple[Path, dict[str, Any]]:
+    for path, payload in _restaurant_config_entries(root, family=family):
+        if _logical_preset_id(path, payload) == preset_id:
+            return path, payload
+    raise FileNotFoundError(f"Missing {family} preset: {preset_id}")
+
+
+def _load_json_path(path: Path, *, label: str) -> tuple[Path, dict[str, Any]]:
+    if not path.exists():
+        raise FileNotFoundError(f"Missing {label}: {path}")
+    return path, _load_json_file(path)
+
+
+def _compose_case_study_notes(layout_note: str, starter_note: str) -> str:
+    if starter_note and layout_note and starter_note != layout_note:
+        return f"{layout_note} Case-study note: {starter_note}"
+    return starter_note or layout_note
+
+
+def _service_policy_name(base_name: str, abandonment_enabled: bool) -> str:
+    if not abandonment_enabled or "abandonment" in base_name.lower():
+        return base_name
+    return f"{base_name} with Abandonment"
+
+
+def _compose_case_study_config(
+    layout_payload: dict[str, Any],
+    queue_payload: dict[str, Any],
+    reservation_payload: dict[str, Any],
+    starter: CaseStudyStarterVersion,
+) -> dict[str, Any]:
+    config_payload = _strip_preset_metadata(layout_payload)
+    queue_config = _strip_preset_metadata(queue_payload)
+
+    config_payload["restaurant_name"] = starter.restaurant_name or str(
+        config_payload["restaurant_name"]
+    )
+    config_payload["queue_mode"] = queue_config["queue_mode"]
+    config_payload["queue_definitions"] = copy.deepcopy(queue_config["queue_definitions"])
+
+    hold_enabled = bool(reservation_payload.get("hold_tables_for_reservations"))
+    config_payload["reservation_hold_policy"] = {
+        "enabled": hold_enabled,
+        "hold_minutes": starter.hold_minutes if hold_enabled else 0,
+    }
+
+    defaults = dict(config_payload.get("optional_operational_defaults", {}))
+    defaults["notes"] = _compose_case_study_notes(
+        str(defaults.get("notes", "")).strip(),
+        starter.notes,
+    )
+    config_payload["optional_operational_defaults"] = defaults
+    return config_payload
+
+
+def _compose_case_study_policy(
+    seating_payload: dict[str, Any],
+    service_payload: dict[str, Any],
+    starter: CaseStudyStarterVersion,
+) -> dict[str, Any]:
+    seating_policy = copy.deepcopy(seating_payload)
+    service_policy = copy.deepcopy(service_payload)
+    service_policy["policy_name"] = _service_policy_name(
+        str(service_policy["policy_name"]),
+        starter.abandonment_enabled,
+    )
+    service_policy["abandonment_enabled"] = starter.abandonment_enabled
+
+    return {
+        "policy_name": f'{seating_policy["policy_name"]} + {service_policy["policy_name"]}',
+        "source_components": {
+            "restaurant_layout": starter.restaurant_layout_id,
+            "queue_structure": starter.queue_structure_id,
+            "reservation": starter.reservation_policy_id,
+            "seating": starter.seating_policy_id,
+            "service": starter.service_policy_id,
+            "arrivals": starter.arrival_scenario_id,
+        },
+        "seating_policy": seating_policy,
+        "service_policy": service_policy,
+    }
+
+
+def _resolve_case_study_payloads(
+    case_study: str,
+    version: str,
+    *,
+    data_root: str | Path | None = None,
+) -> dict[str, Any]:
+    root = Path(data_root) if data_root else DATA_ROOT
+    normalized_version = _normalize_case_study_version(version)
+    manifest, manifest_path = _load_case_study_manifest(case_study, data_root=root)
+    starter = _manifest_starter_version(manifest, normalized_version)
+
+    layout_path, layout_payload = _find_restaurant_config_preset(
+        root,
+        starter.restaurant_layout_id,
+        family="restaurant_layout",
+    )
+    queue_path, queue_payload = _find_restaurant_config_preset(
+        root,
+        starter.queue_structure_id,
+        family="queue_structure",
+    )
+    reservation_path, reservation_payload = _load_json_path(
+        root / "policies" / f"{starter.reservation_policy_id}.json",
+        label="reservation policy preset",
+    )
+    seating_path, seating_payload = _load_json_path(
+        root / "policies" / f"{starter.seating_policy_id}.json",
+        label="seating policy preset",
+    )
+    service_path, service_payload = _load_json_path(
+        root / "policies" / f"{starter.service_policy_id}.json",
+        label="service policy preset",
+    )
+    arrivals_path = root / "arrival_scenarios" / f"{starter.arrival_scenario_id}.csv"
+    if not arrivals_path.exists():
+        raise FileNotFoundError(f"Missing arrival preset: {arrivals_path}")
+
+    config_payload = _compose_case_study_config(
+        layout_payload,
+        queue_payload,
+        reservation_payload,
+        starter,
+    )
+    policy_payload = _compose_case_study_policy(seating_payload, service_payload, starter)
+    arrivals_csv = arrivals_path.read_text(encoding="utf-8")
+
+    return {
+        "scenario_name": f"{case_study}_{normalized_version}",
+        "config_json": json.dumps(config_payload, indent=2),
+        "policy_json": json.dumps(policy_payload, indent=2),
+        "arrivals_csv": arrivals_csv,
+        "source_paths": {
+            "case_study": str(manifest_path),
+            "config": " | ".join(
+                [
+                    str(manifest_path),
+                    str(layout_path),
+                    str(queue_path),
+                    str(reservation_path),
+                ]
+            ),
+            "arrivals": str(arrivals_path),
+            "policy": " | ".join(
+                [
+                    str(manifest_path),
+                    str(seating_path),
+                    str(service_path),
+                ]
+            ),
+        },
+    }
+
+
 def discover_case_studies(*, data_root: str | Path | None = None) -> list[CaseStudyMetadata]:
     root = Path(data_root) if data_root else DATA_ROOT
     case_root = root / "case_studies"
     case_studies: list[CaseStudyMetadata] = []
     for case_dir in sorted(path for path in case_root.iterdir() if path.is_dir()):
-        readme_path = case_dir / "README.md"
-        summary = ""
-        title = case_dir.name
-        if readme_path.exists():
-            lines = [line.strip() for line in readme_path.read_text(encoding="utf-8").splitlines()]
-            non_empty = [line for line in lines if line]
-            if non_empty:
-                title = non_empty[0].lstrip("# ").strip()
-                summary = non_empty[1] if len(non_empty) > 1 else ""
+        manifest, _ = _load_case_study_manifest(case_dir.name, data_root=root)
+        readme_title, readme_summary = _read_case_study_readme(case_dir)
+        versions_raw = manifest.get("versions", {})
         versions = sorted(
-            path.stem.split("_")[-1]
-            for path in case_dir.glob("config_*.json")
-            if path.stem.split("_")[-1] in {"A", "B"}
+            version_key
+            for version_key in versions_raw
+            if isinstance(version_key, str) and version_key in {"A", "B"}
         )
+        starter_versions = {
+            version_key: _starter_version_from_manifest(starter_raw)
+            for version_key, starter_raw in versions_raw.items()
+            if isinstance(version_key, str) and version_key in {"A", "B"} and isinstance(starter_raw, dict)
+        }
         case_studies.append(
             CaseStudyMetadata(
                 case_study=case_dir.name,
-                title=title,
-                summary=summary,
+                title=str(manifest.get("title") or readme_title or case_dir.name),
+                summary=str(manifest.get("summary") or readme_summary),
                 versions=versions,
                 path=str(case_dir),
+                focus_label=str(manifest.get("focus_label", "")).strip(),
+                starter_versions=starter_versions,
             )
         )
     return case_studies
@@ -427,12 +711,13 @@ def _humanize_stem(stem: str) -> str:
 def _json_preset_record(
     path: Path,
     *,
+    payload: dict[str, Any] | None = None,
     title_key: str,
     title_resolver: Callable[[dict[str, Any]], str] | None = None,
     description_resolver: Callable[[dict[str, Any]], str] | None = None,
 ) -> dict[str, object]:
     raw = path.read_text(encoding="utf-8")
-    data = json.loads(raw)
+    data = payload if payload is not None else json.loads(raw)
     title = (
         title_resolver(data).strip()
         if title_resolver is not None
@@ -442,7 +727,7 @@ def _json_preset_record(
     if description_resolver is not None:
         description = description_resolver(data).strip()
     return {
-        "id": path.stem,
+        "id": _logical_preset_id(path, data),
         "title": title,
         "description": description,
         "source_path": str(path),
@@ -467,21 +752,10 @@ def _csv_preset_record(path: Path) -> dict[str, object]:
 
 def load_builder_presets(*, data_root: str | Path | None = None) -> dict[str, list[dict[str, object]]]:
     root = Path(data_root) if data_root else DATA_ROOT
-    restaurant_root = root / "restaurant_configs"
     policy_root = root / "policies"
     arrivals_root = root / "arrival_scenarios"
-
-    restaurant_layouts = [
-        restaurant_root / "restaurant_small_tables.json",
-        restaurant_root / "restaurant_base.json",
-        restaurant_root / "restaurant_large_tables.json",
-    ]
-    queue_structures = [
-        restaurant_root / "restaurant_single_queue.json",
-        restaurant_root / "restaurant_multi_queue.json",
-        restaurant_root / "restaurant_coarse_queue.json",
-        restaurant_root / "restaurant_fine_queue.json",
-    ]
+    restaurant_layouts = _restaurant_config_entries(root, family="restaurant_layout")
+    queue_structures = _restaurant_config_entries(root, family="queue_structure")
 
     def config_description(payload: dict[str, Any]) -> str:
         defaults = payload.get("optional_operational_defaults", {})
@@ -503,18 +777,20 @@ def load_builder_presets(*, data_root: str | Path | None = None) -> dict[str, li
         "restaurant_layouts": [
             _json_preset_record(
                 path,
+                payload=payload,
                 title_key="restaurant_name",
                 description_resolver=config_description,
             )
-            for path in restaurant_layouts
+            for path, payload in restaurant_layouts
         ],
         "queue_structures": [
             _json_preset_record(
                 path,
+                payload=payload,
                 title_key="restaurant_name",
                 description_resolver=config_description,
             )
-            for path in queue_structures
+            for path, payload in queue_structures
         ],
         "seating_policies": [
             _json_preset_record(path, title_key="policy_name")
@@ -545,14 +821,12 @@ def case_study_input_paths(
     version: str,
     *,
     data_root: str | Path | None = None,
-) -> tuple[Path, Path, Path]:
-    root = Path(data_root) if data_root else DATA_ROOT
-    case_dir = root / "case_studies" / case_study
-    normalized_version = version.upper()
+) -> tuple[str, str, str]:
+    resolved = _resolve_case_study_payloads(case_study, version, data_root=data_root)
     return (
-        case_dir / f"config_{normalized_version}.json",
-        case_dir / "arrivals.csv",
-        case_dir / f"policy_{normalized_version}.json",
+        str(resolved["source_paths"]["config"]),
+        str(resolved["source_paths"]["arrivals"]),
+        str(resolved["source_paths"]["policy"]),
     )
 
 
@@ -562,13 +836,9 @@ def load_case_study_inputs(
     *,
     data_root: str | Path | None = None,
 ) -> dict[str, str]:
-    config_path, arrivals_path, policy_path = case_study_input_paths(
-        case_study,
-        version,
-        data_root=data_root,
-    )
+    resolved = _resolve_case_study_payloads(case_study, version, data_root=data_root)
     return {
-        "config_json": config_path.read_text(encoding="utf-8"),
-        "arrivals_csv": arrivals_path.read_text(encoding="utf-8"),
-        "policy_json": policy_path.read_text(encoding="utf-8"),
+        "config_json": resolved["config_json"],
+        "arrivals_csv": resolved["arrivals_csv"],
+        "policy_json": resolved["policy_json"],
     }

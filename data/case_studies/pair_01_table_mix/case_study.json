@@ -1,0 +1,31 @@
+{
+  "title": "Pair 01: Dessert Lounge vs Family Trattoria",
+  "summary": "This comparison keeps the queue logic, booking protection, and service rules the same, but swaps the dining-room footprint. Option A uses a dessert lounge built around couples and small groups, while Option B uses a family trattoria with more large tables to test how the same large-party wave feels in two very different rooms.",
+  "focus_label": "Dining room footprint",
+  "versions": {
+    "A": {
+      "label": "Dessert lounge layout",
+      "restaurant_layout_id": "layout_dessert_cafe",
+      "queue_structure_id": "queue_balanced_size",
+      "reservation_policy_id": "reservation_enabled",
+      "seating_policy_id": "seating_best_fit",
+      "service_policy_id": "service_default",
+      "arrival_scenario_id": "large_party_heavy_base",
+      "hold_minutes": 10,
+      "abandonment_enabled": false,
+      "notes": "The room favors couples and date-night traffic, so larger bookings create seat-fit tension under the same arrival wave."
+    },
+    "B": {
+      "label": "Family trattoria layout",
+      "restaurant_layout_id": "layout_family_trattoria",
+      "queue_structure_id": "queue_balanced_size",
+      "reservation_policy_id": "reservation_enabled",
+      "seating_policy_id": "seating_best_fit",
+      "service_policy_id": "service_default",
+      "arrival_scenario_id": "large_party_heavy_base",
+      "hold_minutes": 10,
+      "abandonment_enabled": false,
+      "notes": "The floor dedicates more six- and eight-seat tables to absorb celebration parties with less reshuffling."
+    }
+  }
+}

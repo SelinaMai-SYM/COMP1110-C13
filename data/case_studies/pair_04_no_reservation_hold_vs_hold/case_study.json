@@ -1,0 +1,31 @@
+{
+  "title": "Pair 04: No Reservation Hold vs Reservation Hold",
+  "summary": "This comparison keeps the fine-dining room, reservation-heavy arrivals, and service rules fixed, but changes how strongly bookings are protected. Option A releases tables immediately if the booked party has not arrived, while Option B protects those tables through the grace period to show the trade-off between honoring reservations and keeping walk-ins moving.",
+  "focus_label": "Reservation protection",
+  "versions": {
+    "A": {
+      "label": "No hold after booking time",
+      "restaurant_layout_id": "layout_fine_dining",
+      "queue_structure_id": "queue_balanced_size",
+      "reservation_policy_id": "reservation_disabled",
+      "seating_policy_id": "seating_reservation_priority",
+      "service_policy_id": "service_default",
+      "arrival_scenario_id": "reservation_mixed_base",
+      "hold_minutes": 0,
+      "abandonment_enabled": false,
+      "notes": "Tables return to the floor immediately if the booked party has not yet arrived."
+    },
+    "B": {
+      "label": "Protect bookings through grace period",
+      "restaurant_layout_id": "layout_fine_dining",
+      "queue_structure_id": "queue_balanced_size",
+      "reservation_policy_id": "reservation_enabled",
+      "seating_policy_id": "seating_reservation_priority",
+      "service_policy_id": "service_default",
+      "arrival_scenario_id": "reservation_mixed_base",
+      "hold_minutes": 15,
+      "abandonment_enabled": false,
+      "notes": "Tables remain protected for booked guests while the grace window is still open."
+    }
+  }
+}

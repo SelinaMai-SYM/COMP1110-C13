@@ -1,7 +1,10 @@
 {
-  "restaurant_name": "Pair 01 A - Small Table Heavy Layout",
-  "simulation_start": "11:30",
-  "simulation_end": "22:00",
+  "preset_id": "layout_ramen_bar",
+  "preset_family": "restaurant_layout",
+  "preset_order": 4,
+  "restaurant_name": "Shoyu Ramen Counter",
+  "simulation_start": "11:00",
+  "simulation_end": "22:30",
   "queue_mode": "size_based",
   "queue_definitions": [
     {
@@ -27,79 +30,71 @@
   ],
   "tables": [
     {
-      "table_id": "T01",
+      "table_id": "R01",
+      "capacity": 2,
+      "zone": "Counter"
+    },
+    {
+      "table_id": "R02",
+      "capacity": 2,
+      "zone": "Counter"
+    },
+    {
+      "table_id": "R03",
       "capacity": 2,
       "zone": "Window"
     },
     {
-      "table_id": "T02",
+      "table_id": "R04",
       "capacity": 2,
       "zone": "Window"
     },
     {
-      "table_id": "T03",
-      "capacity": 2,
-      "zone": "Window"
-    },
-    {
-      "table_id": "T04",
-      "capacity": 2,
-      "zone": "Patio"
-    },
-    {
-      "table_id": "T05",
-      "capacity": 2,
-      "zone": "Patio"
-    },
-    {
-      "table_id": "T06",
+      "table_id": "R05",
       "capacity": 4,
-      "zone": "Main"
+      "zone": "Tatami Booth"
     },
     {
-      "table_id": "T07",
+      "table_id": "R06",
       "capacity": 4,
-      "zone": "Main"
+      "zone": "Tatami Booth"
     },
     {
-      "table_id": "T08",
+      "table_id": "R07",
       "capacity": 4,
-      "zone": "Main"
+      "zone": "Main Room"
     },
     {
-      "table_id": "T09",
+      "table_id": "R08",
       "capacity": 4,
-      "zone": "Main"
+      "zone": "Main Room"
     },
     {
-      "table_id": "T10",
-      "capacity": 4,
-      "zone": "Main"
-    },
-    {
-      "table_id": "T11",
+      "table_id": "R09",
       "capacity": 6,
-      "zone": "Garden"
+      "zone": "Private Nook"
     },
     {
-      "table_id": "T12",
+      "table_id": "R10",
       "capacity": 8,
-      "zone": "Garden"
+      "zone": "Chef Table"
     }
   ],
   "table_sharing_allowed": false,
   "table_combining_allowed": false,
   "reservation_hold_policy": {
-    "enabled": true,
-    "hold_minutes": 10
+    "enabled": false,
+    "hold_minutes": 0
   },
   "default_reset_policy": {
     "enabled": true,
     "default_reset_minutes": 4
   },
   "optional_operational_defaults": {
-    "max_seating_actions_per_event_time": 2,
+    "max_seating_actions_per_event_time": 3,
     "max_cleaning_actions_per_event_time": 2,
-    "notes": "Pair 01 A changes only the table mix toward smaller tables."
+    "service_model": "fast_full_service",
+    "signature_cuisine": "Japanese ramen and small plates",
+    "notes": "Counter-heavy ramen room that rewards disciplined queueing when the lunch rush lands all at once."
   }
 }

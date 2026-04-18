@@ -1,3 +1,3 @@
-# Pair 01: Table Mix
+# Pair 01: Dessert Lounge vs Family Trattoria
 
-This pair changes only the table mix while holding arrivals, queue structure, reservation holding, and seating/service policy fixed. Version A uses more small tables, while Version B uses fewer but larger tables. Compare `average_wait_time`, `groups_served`, `table_utilization_overall`, `average_table_fit_efficiency`, and `reservation_fulfillment_rate` to examine whether better seat matching for small parties outweighs the flexibility benefits of larger tables when several large groups arrive during the same dinner window.
+This comparison keeps the queue logic, booking protection, and service rules the same, but swaps the dining-room footprint. Option A uses a dessert lounge built around couples and small groups, while Option B uses a family trattoria with more large tables to test how the same large-party wave feels in two very different rooms.

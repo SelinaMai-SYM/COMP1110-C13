@@ -1,3 +1,3 @@
 # Pair 06: No Abandonment vs Abandonment Enabled
 
-This pair changes only the abandonment rule while keeping the stress-test arrivals, table layout, queue structure, reservation holding, and base service capacity fixed. Version A forces every group to remain in the system, while Version B allows departures once waiting exceeds tolerance. Compare `groups_abandoned`, `max_queue_length`, `average_wait_time`, `service_level_within_15_min`, and `groups_served` to highlight the trade-off between congestion reduction and customer loss.
+This comparison keeps the bubble-tea lounge, the stressful arrival rush, and the core service rules the same, but changes what happens when waits get too long. Option A assumes everyone stays, while Option B allows some parties to leave so you can see the trade-off between a shorter line and lost guests.

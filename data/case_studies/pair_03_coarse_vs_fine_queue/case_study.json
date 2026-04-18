@@ -1,0 +1,31 @@
+{
+  "title": "Pair 03: Coarse vs Fine Queue Buckets",
+  "summary": "This comparison keeps the dim sum hall, arrivals, and booking rules fixed, but changes how detailed the party-size buckets become. Option A uses broader bands that are easier for hosts to scan, while Option B uses finer buckets to see whether better seat matching is worth the extra operational attention.",
+  "focus_label": "Queue resolution",
+  "versions": {
+    "A": {
+      "label": "Broader queue bands",
+      "restaurant_layout_id": "layout_dim_sum_hall",
+      "queue_structure_id": "queue_coarse_party_bands",
+      "reservation_policy_id": "reservation_enabled",
+      "seating_policy_id": "seating_fcfs",
+      "service_policy_id": "service_default",
+      "arrival_scenario_id": "large_party_heavy_base",
+      "hold_minutes": 10,
+      "abandonment_enabled": false,
+      "notes": "The banquet floor is easy to manage when hosts only watch three bands, but medium and large parties compete inside the same queue."
+    },
+    "B": {
+      "label": "Fine-grained queue bands",
+      "restaurant_layout_id": "layout_dim_sum_hall",
+      "queue_structure_id": "queue_fine_party_bands",
+      "reservation_policy_id": "reservation_enabled",
+      "seating_policy_id": "seating_fcfs",
+      "service_policy_id": "service_default",
+      "arrival_scenario_id": "large_party_heavy_base",
+      "hold_minutes": 10,
+      "abandonment_enabled": false,
+      "notes": "Hosts separate one-top, two-top, and family-size demand more tightly so large round tables are not held up by mixed queues."
+    }
+  }
+}

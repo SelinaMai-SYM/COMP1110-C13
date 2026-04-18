@@ -1,0 +1,31 @@
+{
+  "title": "Pair 06: No Abandonment vs Abandonment Enabled",
+  "summary": "This comparison keeps the bubble-tea lounge, the stressful arrival rush, and the core service rules the same, but changes what happens when waits get too long. Option A assumes everyone stays, while Option B allows some parties to leave so you can see the trade-off between a shorter line and lost guests.",
+  "focus_label": "Long-wait behaviour",
+  "versions": {
+    "A": {
+      "label": "Everyone stays in line",
+      "restaurant_layout_id": "layout_bubble_tea_express",
+      "queue_structure_id": "queue_balanced_size",
+      "reservation_policy_id": "reservation_disabled",
+      "seating_policy_id": "seating_fcfs",
+      "service_policy_id": "service_default",
+      "arrival_scenario_id": "stress_peak_base",
+      "hold_minutes": 0,
+      "abandonment_enabled": false,
+      "notes": "The lounge absorbs all demand, even when the queue stretches and impatient guests keep waiting."
+    },
+    "B": {
+      "label": "Impatient guests can leave",
+      "restaurant_layout_id": "layout_bubble_tea_express",
+      "queue_structure_id": "queue_balanced_size",
+      "reservation_policy_id": "reservation_disabled",
+      "seating_policy_id": "seating_fcfs",
+      "service_policy_id": "service_default",
+      "arrival_scenario_id": "stress_peak_base",
+      "hold_minutes": 0,
+      "abandonment_enabled": true,
+      "notes": "The queue shortens because some guests walk away once their wait crosses their tolerance threshold."
+    }
+  }
+}

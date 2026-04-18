@@ -285,12 +285,29 @@ class MetricsRecord:
 
 
 @dataclass(frozen=True)
+class CaseStudyStarterVersion:
+    label: str
+    restaurant_layout_id: str
+    queue_structure_id: str
+    reservation_policy_id: str
+    seating_policy_id: str
+    service_policy_id: str
+    arrival_scenario_id: str
+    hold_minutes: int
+    abandonment_enabled: bool
+    restaurant_name: str | None = None
+    notes: str = ""
+
+
+@dataclass(frozen=True)
 class CaseStudyMetadata:
     case_study: str
     title: str
     summary: str
     versions: list[str]
     path: str
+    focus_label: str = ""
+    starter_versions: dict[str, CaseStudyStarterVersion] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)

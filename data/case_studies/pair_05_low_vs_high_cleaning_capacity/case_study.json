@@ -1,0 +1,31 @@
+{
+  "title": "Pair 05: Low vs High Cleaning Capacity",
+  "summary": "This comparison keeps the Korean BBQ room, arrivals, and reservation handling fixed, but changes how quickly tables can be reset and returned to service. Option A has a tighter cleaning bottleneck, while Option B clears grills faster so you can see how much smoother the floor feels when reset capacity expands.",
+  "focus_label": "Reset capacity",
+  "versions": {
+    "A": {
+      "label": "Tight cleaning bottleneck",
+      "restaurant_layout_id": "layout_korean_bbq",
+      "queue_structure_id": "queue_balanced_size",
+      "reservation_policy_id": "reservation_enabled",
+      "seating_policy_id": "seating_best_fit",
+      "service_policy_id": "service_low_cleaning_capacity",
+      "arrival_scenario_id": "dinner_peak_base",
+      "hold_minutes": 10,
+      "abandonment_enabled": false,
+      "notes": "Staff can only turn a small number of grill tables at once, so dirty tables accumulate during the dinner peak."
+    },
+    "B": {
+      "label": "Expanded cleaning team",
+      "restaurant_layout_id": "layout_korean_bbq",
+      "queue_structure_id": "queue_balanced_size",
+      "reservation_policy_id": "reservation_enabled",
+      "seating_policy_id": "seating_best_fit",
+      "service_policy_id": "service_high_cleaning_capacity",
+      "arrival_scenario_id": "dinner_peak_base",
+      "hold_minutes": 10,
+      "abandonment_enabled": false,
+      "notes": "A stronger reset team gets grill tables back into service faster without changing the arrival stream."
+    }
+  }
+}

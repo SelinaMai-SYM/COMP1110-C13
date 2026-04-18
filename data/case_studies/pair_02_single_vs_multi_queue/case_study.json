@@ -1,0 +1,31 @@
+{
+  "title": "Pair 02: Single Queue vs Multi Queue",
+  "summary": "This comparison keeps the ramen bar, demand, and service rules fixed, but changes how the host stand organises the waitlist. Option A keeps everyone in one line, while Option B splits parties into size-based queues to test whether cleaner table matching is worth the extra operational complexity.",
+  "focus_label": "Waitlist structure",
+  "versions": {
+    "A": {
+      "label": "Single shared line",
+      "restaurant_layout_id": "layout_ramen_bar",
+      "queue_structure_id": "queue_single_line",
+      "reservation_policy_id": "reservation_disabled",
+      "seating_policy_id": "seating_fcfs",
+      "service_policy_id": "service_default",
+      "arrival_scenario_id": "lunch_rush_base",
+      "hold_minutes": 0,
+      "abandonment_enabled": false,
+      "notes": "A single visible line is easy to manage during lunch, but it may hide cleaner table-fit opportunities."
+    },
+    "B": {
+      "label": "Split size-based lines",
+      "restaurant_layout_id": "layout_ramen_bar",
+      "queue_structure_id": "queue_balanced_size",
+      "reservation_policy_id": "reservation_disabled",
+      "seating_policy_id": "seating_fcfs",
+      "service_policy_id": "service_default",
+      "arrival_scenario_id": "lunch_rush_base",
+      "hold_minutes": 0,
+      "abandonment_enabled": false,
+      "notes": "Hosts separate smaller and larger parties so open tables can be matched faster under the same lunch wave."
+    }
+  }
+}
