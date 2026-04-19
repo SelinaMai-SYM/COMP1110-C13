@@ -70,17 +70,6 @@ function describeWalkAwaySetting(enabled: boolean) {
   return enabled ? 'Parties may leave after a long wait' : 'Parties stay on the waitlist until seated'
 }
 
-function normalizeCaseStudyTitle(caseStudy: CaseStudyMetadata | null | undefined) {
-  if (!caseStudy) {
-    return 'Custom Scenario'
-  }
-  return caseStudy.title.replace(/^Pair\s+\d+\s*:\s*/i, '').trim() || 'Custom Scenario'
-}
-
-function customScenarioName(caseStudy: CaseStudyMetadata | null | undefined, version: StarterVersion) {
-  return `${normalizeCaseStudyTitle(caseStudy)} custom plan from Option ${version}`
-}
-
 function nextNotes(
   layout: JsonPreset<RestaurantPresetData>,
   queue: JsonPreset<RestaurantPresetData>,
@@ -139,15 +128,11 @@ export function buildFormFromStarter(
   presets: BuilderPresetsResponse,
 ): BuilderFormState {
   const starter = normalizeStarter(caseStudy, version)
-  const starterMeta = starterVersion(caseStudy, version)
   const layout =
     presets.restaurant_layouts.find((item) => item.id === starter.restaurantLayoutId) ??
     presets.restaurant_layouts[0]
 
   return {
-    scenarioName: customScenarioName(caseStudy, version),
-    restaurantName:
-      starterMeta?.restaurant_name?.trim() || layout?.data.restaurant_name || 'My Restaurant Plan',
     simulationStart: layout?.data.simulation_start ?? '11:00',
     simulationEnd: layout?.data.simulation_end ?? '22:30',
     restaurantLayoutId: starter.restaurantLayoutId,
@@ -263,6 +248,7 @@ export function buildCaseStudyOverviewRows(
 export function buildCustomScenarioPayload(
   form: BuilderFormState,
   presets: BuilderPresetsResponse,
+  version: StarterVersion,
 ): CustomScenarioPayload {
   const layout = getPresetById(presets.restaurant_layouts, form.restaurantLayoutId)
   const queue = getPresetById(presets.queue_structures, form.queueStructureId)
@@ -272,7 +258,7 @@ export function buildCustomScenarioPayload(
   const arrivals = getPresetById(presets.arrival_scenarios, form.arrivalScenarioId)
 
   const config = {
-    restaurant_name: form.restaurantName.trim() || layout.data.restaurant_name,
+    restaurant_name: layout.data.restaurant_name,
     simulation_start: form.simulationStart,
     simulation_end: form.simulationEnd,
     queue_mode: queue.data.queue_mode,
@@ -312,7 +298,7 @@ export function buildCustomScenarioPayload(
   }
 
   return {
-    scenario_name: form.scenarioName.trim() || 'custom_scenario',
+    scenario_name: `Option ${version}`,
     config_json: JSON.stringify(config, null, 2),
     policy_json: JSON.stringify(policyBundle, null, 2),
     arrivals_csv: arrivals.raw,
@@ -338,20 +324,6 @@ export function buildCustomComparisonRows(
   const arrivalsB = getPresetById(presets.arrival_scenarios, formB.arrivalScenarioId)
 
   const rows: CaseStudyOverviewRow[] = [
-    {
-      label: 'Option name',
-      versionA: formA.scenarioName.trim() || 'Option A',
-      versionB: formB.scenarioName.trim() || 'Option B',
-      changed: formA.scenarioName.trim() !== formB.scenarioName.trim(),
-    },
-    {
-      label: 'Venue name',
-      versionA: formA.restaurantName.trim() || layoutA.data.restaurant_name,
-      versionB: formB.restaurantName.trim() || layoutB.data.restaurant_name,
-      changed:
-        (formA.restaurantName.trim() || layoutA.data.restaurant_name) !==
-        (formB.restaurantName.trim() || layoutB.data.restaurant_name),
-    },
     {
       label: 'Service window',
       versionA: `${formA.simulationStart} to ${formA.simulationEnd}`,

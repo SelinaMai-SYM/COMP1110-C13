@@ -213,8 +213,6 @@ export interface BuilderPresetsResponse {
 }
 
 export interface BuilderFormState {
-  scenarioName: string
-  restaurantName: string
   simulationStart: string
   simulationEnd: string
   restaurantLayoutId: string
