@@ -128,7 +128,6 @@ export interface QueueDefinitionInput {
 export interface TableSpecInput {
   table_id: string
   capacity: number
-  zone: string
 }
 
 export interface RestaurantPresetData {
@@ -201,6 +200,9 @@ export interface CsvPreset {
   source_path: string
   raw: string
   row_count: number
+  max_group_size: number
+  reservation_groups: number
+  walkin_groups: number
 }
 
 export interface BuilderPresetsResponse {

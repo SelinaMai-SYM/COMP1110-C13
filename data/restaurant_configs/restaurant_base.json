@@ -1,7 +1,6 @@
 {
   "preset_id": "layout_bubble_tea_express",
   "preset_family": "restaurant_layout",
-  "preset_order": 1,
   "restaurant_name": "Tea Cloud Bubble Bar",
   "simulation_start": "11:00",
   "simulation_end": "22:30",
@@ -31,53 +30,59 @@
   "tables": [
     {
       "table_id": "B01",
-      "capacity": 2,
-      "zone": "Front Window"
+      "capacity": 1
     },
     {
       "table_id": "B02",
-      "capacity": 2,
-      "zone": "Front Window"
+      "capacity": 1
     },
     {
       "table_id": "B03",
-      "capacity": 2,
-      "zone": "Side Booth"
+      "capacity": 1
     },
     {
       "table_id": "B04",
-      "capacity": 2,
-      "zone": "Side Booth"
+      "capacity": 1
     },
     {
       "table_id": "B05",
-      "capacity": 2,
-      "zone": "Tea Lab"
+      "capacity": 1
     },
     {
       "table_id": "B06",
-      "capacity": 4,
-      "zone": "Tea Lab"
+      "capacity": 1
     },
     {
       "table_id": "B07",
-      "capacity": 4,
-      "zone": "Tea Lab"
+      "capacity": 2
     },
     {
       "table_id": "B08",
-      "capacity": 4,
-      "zone": "Patio"
+      "capacity": 2
     },
     {
       "table_id": "B09",
-      "capacity": 6,
-      "zone": "Patio"
+      "capacity": 2
     },
     {
       "table_id": "B10",
-      "capacity": 8,
-      "zone": "Community Bench"
+      "capacity": 2
+    },
+    {
+      "table_id": "B11",
+      "capacity": 2
+    },
+    {
+      "table_id": "B12",
+      "capacity": 2
+    },
+    {
+      "table_id": "B13",
+      "capacity": 4
+    },
+    {
+      "table_id": "B14",
+      "capacity": 6
     }
   ],
   "table_sharing_allowed": false,
@@ -95,6 +100,6 @@
     "max_cleaning_actions_per_event_time": 3,
     "service_model": "counter_service",
     "signature_cuisine": "bubble tea and light snacks",
-    "notes": "Compact lounge with strong turnover for pairs, trios, and short social visits."
+    "notes": "Compact bubble-tea shop with a long counter, several window stools, a few short-stay tables, and one larger shared table for small groups."
   }
 }

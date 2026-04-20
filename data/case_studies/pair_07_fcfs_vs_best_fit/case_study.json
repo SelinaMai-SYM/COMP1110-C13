@@ -1,0 +1,31 @@
+{
+  "title": "Pair 07: FCFS vs Best-Fit Seating",
+  "summary": "This comparison keeps the burger hall, a mixed dinner wave, and service pace fixed, but changes how open tables are assigned. Option A seats parties with the earliest suitable table, while Option B uses best-fit matching to test whether tighter table matching improves flow when pairs, fours, and larger groups overlap.",
+  "focus_label": "Seating heuristic",
+  "versions": {
+    "A": {
+      "label": "FCFS earliest suitable",
+      "restaurant_layout_id": "layout_burger_fast_casual",
+      "queue_structure_id": "queue_balanced_size",
+      "reservation_policy_id": "reservation_disabled",
+      "seating_policy_id": "seating_fcfs",
+      "service_policy_id": "service_default",
+      "arrival_scenario_id": "dinner_peak_base",
+      "hold_minutes": 0,
+      "abandonment_enabled": false,
+      "notes": "Hosts assign the earliest suitable open table during a busy dinner wave where mixed party sizes overlap."
+    },
+    "B": {
+      "label": "Best-fit table matching",
+      "restaurant_layout_id": "layout_burger_fast_casual",
+      "queue_structure_id": "queue_balanced_size",
+      "reservation_policy_id": "reservation_disabled",
+      "seating_policy_id": "seating_best_fit",
+      "service_policy_id": "service_default",
+      "arrival_scenario_id": "dinner_peak_base",
+      "hold_minutes": 0,
+      "abandonment_enabled": false,
+      "notes": "Hosts bias toward the tightest fitting open table so smaller parties are less likely to consume flexible larger tables during the same dinner rush."
+    }
+  }
+}

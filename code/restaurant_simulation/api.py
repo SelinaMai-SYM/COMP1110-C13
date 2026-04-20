@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from dataclasses import asdict
 from pathlib import Path
 from typing import Literal
@@ -10,20 +9,19 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from .loading import (
-    DATA_ROOT,
     discover_case_studies,
     load_case_study,
     load_builder_presets,
     load_case_study_inputs,
     load_custom_scenario,
     load_schema_documents,
+    resolve_data_root,
 )
 from .runners import run_case_pair, run_scenario
 
 
 def _data_root() -> Path:
-    configured = os.getenv("SIM_DATA_ROOT")
-    return Path(configured) if configured else DATA_ROOT
+    return resolve_data_root()
 
 
 class CaseStudyRequest(BaseModel):

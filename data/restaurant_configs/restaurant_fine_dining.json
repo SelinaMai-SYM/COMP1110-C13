@@ -1,7 +1,6 @@
 {
   "preset_id": "layout_fine_dining",
   "preset_family": "restaurant_layout",
-  "preset_order": 8,
   "restaurant_name": "Cedar Tasting Room",
   "simulation_start": "11:00",
   "simulation_end": "22:30",
@@ -31,38 +30,51 @@
   "tables": [
     {
       "table_id": "T01",
-      "capacity": 2,
-      "zone": "Window Pairing"
+      "capacity": 2
     },
     {
       "table_id": "T02",
-      "capacity": 2,
-      "zone": "Window Pairing"
+      "capacity": 2
     },
     {
       "table_id": "T03",
-      "capacity": 4,
-      "zone": "Chef View"
+      "capacity": 2
     },
     {
       "table_id": "T04",
-      "capacity": 4,
-      "zone": "Chef View"
+      "capacity": 2
     },
     {
       "table_id": "T05",
-      "capacity": 6,
-      "zone": "Private Dining"
+      "capacity": 2
     },
     {
       "table_id": "T06",
-      "capacity": 6,
-      "zone": "Private Dining"
+      "capacity": 4
     },
     {
       "table_id": "T07",
-      "capacity": 8,
-      "zone": "Tasting Salon"
+      "capacity": 4
+    },
+    {
+      "table_id": "T08",
+      "capacity": 4
+    },
+    {
+      "table_id": "T09",
+      "capacity": 6
+    },
+    {
+      "table_id": "T10",
+      "capacity": 6
+    },
+    {
+      "table_id": "T11",
+      "capacity": 6
+    },
+    {
+      "table_id": "T12",
+      "capacity": 8
     }
   ],
   "table_sharing_allowed": false,
@@ -80,6 +92,6 @@
     "max_cleaning_actions_per_event_time": 2,
     "service_model": "fine_dining",
     "signature_cuisine": "seasonal tasting menu",
-    "notes": "Low-seat, reservation-led room where table protection and precise pacing matter more than raw throughput."
+    "notes": "Reservation-led fine-dining room with more tables than before, but still intentionally tighter and more capacity-constrained than the casual venues."
   }
 }

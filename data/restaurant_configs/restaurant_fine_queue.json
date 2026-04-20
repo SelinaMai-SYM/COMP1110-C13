@@ -1,8 +1,7 @@
 {
   "preset_id": "queue_fine_party_bands",
   "preset_family": "queue_structure",
-  "preset_order": 4,
-  "restaurant_name": "Fine-grained party-size bands",
+  "restaurant_name": "Queue template: fine-grained party-size bands",
   "simulation_start": "11:00",
   "simulation_end": "22:30",
   "queue_mode": "size_based",
@@ -35,24 +34,20 @@
   ],
   "tables": [
     {
-      "table_id": "Q31",
-      "capacity": 2,
-      "zone": "Reference"
+      "table_id": "F01",
+      "capacity": 2
     },
     {
-      "table_id": "Q32",
-      "capacity": 4,
-      "zone": "Reference"
+      "table_id": "F02",
+      "capacity": 4
     },
     {
-      "table_id": "Q33",
-      "capacity": 6,
-      "zone": "Reference"
+      "table_id": "F03",
+      "capacity": 6
     },
     {
-      "table_id": "Q34",
-      "capacity": 8,
-      "zone": "Reference"
+      "table_id": "F04",
+      "capacity": 8
     }
   ],
   "table_sharing_allowed": false,
@@ -68,6 +63,6 @@
   "optional_operational_defaults": {
     "max_seating_actions_per_event_time": 2,
     "max_cleaning_actions_per_event_time": 2,
-    "notes": "Extra queue resolution helps hosts match exact party sizes, but it demands tighter operational attention."
+    "notes": "Abstract queue template for the builder: more queue buckets create tighter matching but demand more attention."
   }
 }

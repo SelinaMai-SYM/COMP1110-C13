@@ -1,8 +1,7 @@
 {
   "preset_id": "queue_coarse_party_bands",
   "preset_family": "queue_structure",
-  "preset_order": 3,
-  "restaurant_name": "Coarse party-size bands",
+  "restaurant_name": "Queue template: coarse party-size bands",
   "simulation_start": "11:00",
   "simulation_end": "22:30",
   "queue_mode": "size_based",
@@ -25,24 +24,20 @@
   ],
   "tables": [
     {
-      "table_id": "Q21",
-      "capacity": 2,
-      "zone": "Reference"
+      "table_id": "C01",
+      "capacity": 2
     },
     {
-      "table_id": "Q22",
-      "capacity": 4,
-      "zone": "Reference"
+      "table_id": "C02",
+      "capacity": 4
     },
     {
-      "table_id": "Q23",
-      "capacity": 6,
-      "zone": "Reference"
+      "table_id": "C03",
+      "capacity": 6
     },
     {
-      "table_id": "Q24",
-      "capacity": 8,
-      "zone": "Reference"
+      "table_id": "C04",
+      "capacity": 8
     }
   ],
   "table_sharing_allowed": false,
@@ -58,6 +53,6 @@
   "optional_operational_defaults": {
     "max_seating_actions_per_event_time": 2,
     "max_cleaning_actions_per_event_time": 2,
-    "notes": "Broader buckets reduce host workload, but they blend together very different medium-size parties."
+    "notes": "Abstract queue template for the builder: three broad queue buckets trade precision for lower host workload."
   }
 }

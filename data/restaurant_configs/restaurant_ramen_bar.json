@@ -1,7 +1,6 @@
 {
   "preset_id": "layout_ramen_bar",
   "preset_family": "restaurant_layout",
-  "preset_order": 4,
   "restaurant_name": "Shoyu Ramen Counter",
   "simulation_start": "11:00",
   "simulation_end": "22:30",
@@ -31,53 +30,75 @@
   "tables": [
     {
       "table_id": "R01",
-      "capacity": 2,
-      "zone": "Counter"
+      "capacity": 1
     },
     {
       "table_id": "R02",
-      "capacity": 2,
-      "zone": "Counter"
+      "capacity": 1
     },
     {
       "table_id": "R03",
-      "capacity": 2,
-      "zone": "Window"
+      "capacity": 1
     },
     {
       "table_id": "R04",
-      "capacity": 2,
-      "zone": "Window"
+      "capacity": 1
     },
     {
       "table_id": "R05",
-      "capacity": 4,
-      "zone": "Tatami Booth"
+      "capacity": 1
     },
     {
       "table_id": "R06",
-      "capacity": 4,
-      "zone": "Tatami Booth"
+      "capacity": 1
     },
     {
       "table_id": "R07",
-      "capacity": 4,
-      "zone": "Main Room"
+      "capacity": 1
     },
     {
       "table_id": "R08",
-      "capacity": 4,
-      "zone": "Main Room"
+      "capacity": 1
     },
     {
       "table_id": "R09",
-      "capacity": 6,
-      "zone": "Private Nook"
+      "capacity": 1
     },
     {
       "table_id": "R10",
-      "capacity": 8,
-      "zone": "Chef Table"
+      "capacity": 1
+    },
+    {
+      "table_id": "R11",
+      "capacity": 2
+    },
+    {
+      "table_id": "R12",
+      "capacity": 2
+    },
+    {
+      "table_id": "R13",
+      "capacity": 2
+    },
+    {
+      "table_id": "R14",
+      "capacity": 2
+    },
+    {
+      "table_id": "R15",
+      "capacity": 4
+    },
+    {
+      "table_id": "R16",
+      "capacity": 4
+    },
+    {
+      "table_id": "R17",
+      "capacity": 4
+    },
+    {
+      "table_id": "R18",
+      "capacity": 6
     }
   ],
   "table_sharing_allowed": false,
@@ -95,6 +116,6 @@
     "max_cleaning_actions_per_event_time": 2,
     "service_model": "fast_full_service",
     "signature_cuisine": "Japanese ramen and small plates",
-    "notes": "Counter-heavy ramen room that rewards disciplined queueing when the lunch rush lands all at once."
+    "notes": "Counter-led ramen shop with many solo stools, several small pair tables, and only a few larger tables toward the back of the room."
   }
 }

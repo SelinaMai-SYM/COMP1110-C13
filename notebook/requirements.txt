@@ -1,0 +1,6 @@
+# Notebook runtime and verification dependencies.
+ipython
+ipykernel
+nbclient
+nbformat
+plotly

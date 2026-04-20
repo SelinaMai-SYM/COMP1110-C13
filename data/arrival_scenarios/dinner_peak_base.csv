@@ -1,19 +1,31 @@
 group_id,arrival_time,group_size,dining_duration,group_type,reservation_time,grace_period,no_show_flag,abandon_tolerance,notes
-D001,17:35,2,70,reservation,17:30,15,false,30,"early dinner reservation"
-D002,17:40,4,85,walkin,,0,false,35,"walk-in family"
-D003,17:48,3,80,walkin,,0,false,30,"friends meeting after work"
-D004,17:55,6,95,reservation,18:00,15,false,40,"slightly early reservation"
-D005,18:02,2,75,walkin,,0,false,25,"date night pair"
-D006,18:08,5,90,walkin,,0,false,35,"family dinner"
-D007,18:15,4,88,reservation,18:10,15,false,35,"booked group dinner"
-D008,18:22,2,60,walkin,,0,false,20,"quick dinner pair"
-D009,18:30,7,105,reservation,18:25,15,false,45,"large party reservation"
-D010,18:38,3,82,walkin,,0,false,30,"student trio"
-D011,18:46,2,68,walkin,,0,false,22,"late pair"
-D012,18:55,5,96,walkin,,0,false,35,"extended family"
-D013,19:04,4,90,reservation,19:00,15,false,35,"scheduled family table"
-D014,19:16,6,100,walkin,,0,false,40,"walk-in large group"
-D015,19:28,2,65,walkin,,0,false,20,"post-movie pair"
-D016,19:40,4,86,walkin,,0,false,30,"shopping break dinner"
-D017,19:52,3,78,reservation,19:45,15,false,25,"late but within grace"
-D018,20:05,2,62,walkin,,0,false,18,"tail-end dinner pair"
+D001,17:33,4,72,reservation,17:35,15,false,30,early four-top booking
+D002,17:36,4,78,walkin,,0,false,26,family walk-in
+D003,17:38,5,82,walkin,,0,false,18,large walk-in group
+D004,17:40,2,66,walkin,,0,false,26,pair arriving early
+D005,17:41,2,64,walkin,,0,false,26,second pair
+D006,17:43,4,80,walkin,,0,false,24,mid-rush four-top
+D007,17:44,4,76,walkin,,0,false,28,coworker table
+D008,17:47,4,84,reservation,17:45,15,false,28,booked family table
+D009,17:48,4,84,walkin,,0,false,20,late family
+D010,17:50,5,74,walkin,,0,false,20,five-top burst
+D011,17:53,6,88,reservation,17:55,15,false,20,slightly early six-top
+D012,17:56,4,70,walkin,,0,false,30,extra four-top
+D013,17:58,2,68,walkin,,0,false,20,walk-in pair
+D014,18:01,2,66,walkin,,0,false,16,queue pair
+D015,18:04,2,60,walkin,,0,false,16,shorter pair
+D016,18:06,2,66,walkin,,0,false,24,late pair
+D017,18:07,2,66,walkin,,0,false,28,dense pair wave
+D018,18:10,2,86,walkin,,0,false,16,lingering pair
+D019,18:12,2,68,walkin,,0,false,22,another pair
+D020,18:14,5,78,walkin,,0,false,18,five-top after work
+D021,18:16,2,72,walkin,,0,false,28,queue pair later
+D022,18:17,2,88,walkin,,0,false,26,slow pair
+D023,18:18,4,74,walkin,,0,false,20,four-top wave
+D024,18:20,4,84,walkin,,0,false,28,another four-top
+D025,18:22,3,86,walkin,,0,false,20,trio joins rush
+D026,18:25,3,86,walkin,,0,false,18,second trio
+D027,18:28,6,92,reservation,18:30,15,false,30,late-arriving six-top booking
+D028,18:31,4,80,walkin,,0,false,28,late family of four
+D029,18:34,4,80,walkin,,0,false,30,closing four-top
+D030,18:36,5,86,walkin,,0,false,26,final five-top

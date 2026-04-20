@@ -11,7 +11,7 @@ class RunnerTests(unittest.TestCase):
     def test_run_all_writes_batch_outputs(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             payload = run_all_case_studies(output_dir=temp_dir)
-            self.assertEqual(len(payload["comparisons"]), 6)
+            self.assertEqual(len(payload["comparisons"]), 7)
             self.assertTrue(Path(payload["metrics_csv"]).exists())
             self.assertTrue(Path(payload["comparisons_json"]).exists())
 

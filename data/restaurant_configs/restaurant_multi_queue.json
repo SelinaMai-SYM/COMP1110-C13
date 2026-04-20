@@ -1,8 +1,7 @@
 {
   "preset_id": "queue_balanced_size",
   "preset_family": "queue_structure",
-  "preset_order": 2,
-  "restaurant_name": "Balanced size-based waitlists",
+  "restaurant_name": "Queue template: balanced size-based waitlists",
   "simulation_start": "11:00",
   "simulation_end": "22:30",
   "queue_mode": "size_based",
@@ -30,24 +29,20 @@
   ],
   "tables": [
     {
-      "table_id": "Q11",
-      "capacity": 2,
-      "zone": "Reference"
+      "table_id": "M01",
+      "capacity": 2
     },
     {
-      "table_id": "Q12",
-      "capacity": 4,
-      "zone": "Reference"
+      "table_id": "M02",
+      "capacity": 4
     },
     {
-      "table_id": "Q13",
-      "capacity": 6,
-      "zone": "Reference"
+      "table_id": "M03",
+      "capacity": 6
     },
     {
-      "table_id": "Q14",
-      "capacity": 8,
-      "zone": "Reference"
+      "table_id": "M04",
+      "capacity": 8
     }
   ],
   "table_sharing_allowed": false,
@@ -63,6 +58,6 @@
   "optional_operational_defaults": {
     "max_seating_actions_per_event_time": 2,
     "max_cleaning_actions_per_event_time": 2,
-    "notes": "Separate queues for different party bands improve matching while staying easy to explain."
+    "notes": "Abstract queue template for the builder: parties are split into broad size bands to improve table matching."
   }
 }

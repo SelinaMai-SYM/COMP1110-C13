@@ -1,17 +1,37 @@
 group_id,arrival_time,group_size,dining_duration,group_type,reservation_time,grace_period,no_show_flag,abandon_tolerance,notes
-H001,17:40,2,60,walkin,,0,false,25,"small anchor pair"
-H002,17:45,6,95,reservation,17:45,15,false,40,"celebration booking"
-H003,17:52,5,88,walkin,,0,false,35,"family group"
-H004,18:00,8,110,reservation,18:00,15,false,45,"large birthday table"
-H005,18:08,3,70,walkin,,0,false,25,"friends trio"
-H006,18:15,7,100,walkin,,0,false,40,"sports team parents"
-H007,18:24,2,65,walkin,,0,false,20,"date night pair"
-H008,18:33,6,92,reservation,18:30,15,false,35,"work celebration"
-H009,18:41,4,80,walkin,,0,false,30,"siblings dinner"
-H010,18:50,5,90,walkin,,0,false,35,"tour group spillover"
-H011,19:00,2,58,walkin,,0,false,20,"quick late pair"
-H012,19:08,7,102,reservation,19:00,15,false,40,"delayed reservation"
-H013,19:18,6,96,walkin,,0,false,35,"extended family"
-H014,19:30,3,72,walkin,,0,false,25,"post-film trio"
-H015,19:42,8,115,reservation,19:40,15,false,45,"graduation dinner"
-H016,19:56,4,82,walkin,,0,false,28,"late family"
+H001,17:35,2,58,walkin,,0,false,24,small anchor pair
+H002,17:38,6,92,reservation,17:40,15,false,38,celebration booking
+H003,17:42,5,86,walkin,,0,false,34,family group
+H027,17:44,6,94,walkin,,0,false,36,extra family six-top
+H004,17:46,8,108,reservation,17:45,15,false,42,large birthday table
+H005,17:50,3,70,walkin,,0,false,24,friends trio
+H006,17:54,7,102,walkin,,0,false,38,sports team parents
+H028,17:56,7,104,reservation,17:55,15,false,40,overflow reservation group
+H007,17:58,4,80,walkin,,0,false,28,siblings dinner
+H008,18:02,6,94,reservation,18:00,15,false,36,work celebration
+H009,18:07,5,88,walkin,,0,false,34,tour group spillover
+H029,18:11,5,88,walkin,,0,false,32,large walk-in family
+H010,18:12,2,60,walkin,,0,false,20,quick pair
+H011,18:17,7,104,reservation,18:15,15,false,40,late reservation group
+H012,18:22,6,96,walkin,,0,false,36,extended family
+H030,18:25,8,110,walkin,,0,false,42,coach group spillover
+H013,18:28,4,82,walkin,,0,false,28,late family
+H014,18:34,8,112,reservation,18:30,15,false,42,graduation dinner
+H031,18:39,6,96,reservation,18:35,15,false,36,late six-top booking
+H015,18:40,3,72,walkin,,0,false,24,post-film trio
+H016,18:46,6,94,walkin,,0,false,34,second family wave
+H017,18:52,5,86,reservation,18:50,15,false,34,booked large party
+H032,18:53,5,86,walkin,,0,false,32,mid-rush family five-top
+H018,18:58,7,106,walkin,,0,false,40,walk-in celebration group
+H019,19:05,4,80,walkin,,0,false,28,mid-evening family
+H033,19:09,7,106,walkin,,0,false,40,second celebration group
+H020,19:12,6,98,reservation,19:10,15,false,36,scheduled six-top
+H021,19:20,3,70,walkin,,0,false,22,tail-end trio
+H034,19:24,6,98,reservation,19:20,15,false,36,booked family six-top
+H022,19:28,8,114,reservation,19:25,15,false,42,full-family banquet
+H023,19:37,5,88,walkin,,0,false,32,late group of five
+H035,19:41,5,90,walkin,,0,false,30,late group of five
+H024,19:46,6,96,walkin,,0,false,34,last six-top walk-in
+H036,19:52,8,112,walkin,,0,false,42,final banquet walk-in
+H025,19:56,4,78,walkin,,0,false,26,closing family of four
+H026,20:07,2,56,walkin,,0,false,18,final pair

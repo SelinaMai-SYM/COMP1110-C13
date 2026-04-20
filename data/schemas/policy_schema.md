@@ -1,6 +1,6 @@
 # Policy Schema
 
-This data layer separates seating behaviour from service constraints. Reusable policy components live in `data/policies/`, while each case-study folder stores a resolved `policy_A.json` or `policy_B.json` containing both sections for exact scenario reproducibility.
+This data layer separates seating behaviour from service constraints. Reusable policy components live in `data/policies/`, while each `data/case_studies/*/case_study.json` manifest references those shared components. At load time, the simulator resolves the manifest into one combined policy bundle containing both the seating and service sections used by the chosen A/B version.
 
 ## Seating Policy Section
 
@@ -44,4 +44,8 @@ The service section captures cleaning/reset capacity and coarse operational load
 - Service components such as `service_default.json` and `service_low_cleaning_capacity.json`
 - Reservation-control reference files such as `reservation_enabled.json`
 
-The notebook primarily uses the resolved case-study policy bundles, while the reusable components document the policy library and support future extensions.
+The main runtime flow is:
+
+1. `case_study.json` selects one seating component, one service component, and one reservation-control component.
+2. `restaurant_simulation.loading` composes those inputs into a resolved policy bundle for version `A` or `B`.
+3. The API, batch runner, and notebooks all consume that same resolved bundle, so there is one source of truth for guided scenario analysis.

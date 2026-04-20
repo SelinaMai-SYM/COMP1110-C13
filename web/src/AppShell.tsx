@@ -20,6 +20,8 @@ import {
   buildCustomComparisonRows,
   buildCustomScenarioPayload,
   buildFormFromStarter,
+  compatibleArrivalScenarios,
+  normalizeArrivalScenarioForLayout,
 } from './builder'
 import type { CaseStudyOverviewRow } from './builder'
 import type {
@@ -394,13 +396,32 @@ function AppShell() {
     key: Key,
     value: BuilderFormState[Key],
   ) {
-    updateCustomForms((current) => ({
-      ...current,
-      [side]: {
-        ...current[side],
-        [key]: value,
-      },
-    }))
+    updateCustomForms((current) => {
+      const currentForm = current[side]
+      if (key === 'restaurantLayoutId' && builderPresets) {
+        const nextLayoutId = String(value)
+        return {
+          ...current,
+          [side]: {
+            ...currentForm,
+            restaurantLayoutId: nextLayoutId,
+            arrivalScenarioId: normalizeArrivalScenarioForLayout(
+              builderPresets,
+              nextLayoutId,
+              currentForm.arrivalScenarioId,
+            ),
+          },
+        }
+      }
+
+      return {
+        ...current,
+        [side]: {
+          ...currentForm,
+          [key]: value,
+        },
+      }
+    })
   }
 
   function handleReservationPresetChange(side: BuilderSide, nextId: string) {
@@ -659,6 +680,13 @@ function ComparisonOptionCard({
   const holdEnabled =
     presets.reservation_policies.find((item) => item.id === form.reservationPolicyId)?.data
       .hold_tables_for_reservations ?? false
+  const compatibleArrivals = compatibleArrivalScenarios(presets, form.restaurantLayoutId)
+  const arrivalOptions = compatibleArrivals.length ? compatibleArrivals : presets.arrival_scenarios
+  const hiddenArrivalCount = Math.max(presets.arrival_scenarios.length - arrivalOptions.length, 0)
+  const arrivalHelper =
+    hiddenArrivalCount > 0
+      ? `${hiddenArrivalCount} larger-party arrival preset(s) are hidden because this layout has a smaller maximum table size.`
+      : undefined
 
   return (
     <article className={`compare-option-card option-${side.toLowerCase()}`}>
@@ -746,7 +774,8 @@ function ComparisonOptionCard({
           label="Arrival pattern"
           value={form.arrivalScenarioId}
           onChange={(value) => onFieldChange(side, 'arrivalScenarioId', value)}
-          options={presets.arrival_scenarios}
+          options={arrivalOptions}
+          helperText={arrivalHelper}
           wide
         />
       </div>
@@ -1115,12 +1144,14 @@ function PresetField<T extends { id: string; title: string; description: string 
   value,
   onChange,
   options,
+  helperText,
   wide = false,
 }: {
   label: string
   value: string
   onChange: (value: string) => void
   options: T[]
+  helperText?: string
   wide?: boolean
 }) {
   const selected = options.find((option) => option.id === value)
@@ -1137,6 +1168,7 @@ function PresetField<T extends { id: string; title: string; description: string 
       <p className="builder-help">
         {selected?.description || 'Choose the option that best fits your scenario.'}
       </p>
+      {helperText ? <p className="builder-help">{helperText}</p> : null}
     </label>
   )
 }

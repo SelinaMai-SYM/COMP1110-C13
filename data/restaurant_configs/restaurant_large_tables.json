@@ -1,7 +1,6 @@
 {
   "preset_id": "layout_family_trattoria",
   "preset_family": "restaurant_layout",
-  "preset_order": 5,
   "restaurant_name": "Piazza Family Trattoria",
   "simulation_start": "11:00",
   "simulation_end": "22:30",
@@ -31,53 +30,99 @@
   "tables": [
     {
       "table_id": "F01",
-      "capacity": 2,
-      "zone": "Street Window"
+      "capacity": 2
     },
     {
       "table_id": "F02",
-      "capacity": 2,
-      "zone": "Street Window"
+      "capacity": 2
     },
     {
       "table_id": "F03",
-      "capacity": 4,
-      "zone": "Main Room"
+      "capacity": 2
     },
     {
       "table_id": "F04",
-      "capacity": 4,
-      "zone": "Main Room"
+      "capacity": 2
     },
     {
       "table_id": "F05",
-      "capacity": 4,
-      "zone": "Main Room"
+      "capacity": 4
     },
     {
       "table_id": "F06",
-      "capacity": 4,
-      "zone": "Patio"
+      "capacity": 4
     },
     {
       "table_id": "F07",
-      "capacity": 6,
-      "zone": "Patio"
+      "capacity": 4
     },
     {
       "table_id": "F08",
-      "capacity": 6,
-      "zone": "Family Booth"
+      "capacity": 4
     },
     {
       "table_id": "F09",
-      "capacity": 8,
-      "zone": "Celebration Alcove"
+      "capacity": 4
     },
     {
       "table_id": "F10",
-      "capacity": 8,
-      "zone": "Garden Room"
+      "capacity": 4
+    },
+    {
+      "table_id": "F11",
+      "capacity": 4
+    },
+    {
+      "table_id": "F12",
+      "capacity": 4
+    },
+    {
+      "table_id": "F13",
+      "capacity": 4
+    },
+    {
+      "table_id": "F14",
+      "capacity": 4
+    },
+    {
+      "table_id": "F15",
+      "capacity": 6
+    },
+    {
+      "table_id": "F16",
+      "capacity": 6
+    },
+    {
+      "table_id": "F17",
+      "capacity": 6
+    },
+    {
+      "table_id": "F18",
+      "capacity": 6
+    },
+    {
+      "table_id": "F19",
+      "capacity": 6
+    },
+    {
+      "table_id": "F20",
+      "capacity": 6
+    },
+    {
+      "table_id": "F21",
+      "capacity": 8
+    },
+    {
+      "table_id": "F22",
+      "capacity": 8
+    },
+    {
+      "table_id": "F23",
+      "capacity": 8
+    },
+    {
+      "table_id": "F24",
+      "capacity": 8
     }
   ],
   "table_sharing_allowed": false,
@@ -95,6 +140,6 @@
     "max_cleaning_actions_per_event_time": 2,
     "service_model": "casual_full_service",
     "signature_cuisine": "Italian family dining",
-    "notes": "Large-party friendly floor with multiple six- and eight-seat tables for family meals and celebrations."
+    "notes": "Family trattoria with a deep mix of four-tops, several six-top family tables, and multiple larger tables for celebrations."
   }
 }

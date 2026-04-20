@@ -2,6 +2,17 @@
 
 This schema defines the fixed restaurant-level settings for one simulation run. It is designed to support both event-based and step-based simulation engines while keeping table layout, queue design, and reservation holding behaviour explicit and reproducible.
 
+## Preset Metadata
+
+The shared preset library also keeps two metadata fields above the runtime payload:
+
+| Field | Type | Purpose |
+| --- | --- | --- |
+| `preset_id` | string | Stable identifier used by case-study manifests, builder preset discovery, and API responses |
+| `preset_family` | string | Distinguishes real `restaurant_layout` presets from abstract `queue_structure` presets |
+
+These metadata fields help the loader discover reusable presets, but they are stripped out before a scenario is validated as a concrete runtime config. The old `preset_order` field has been removed; interfaces now sort presets stably by title and id instead.
+
 ## Required Top-Level Fields
 
 | Field | Type | Description | Constraints |
@@ -41,7 +52,6 @@ Each table object contains:
 | --- | --- | --- | --- |
 | `table_id` | string | Unique table identifier | Unique within file |
 | `capacity` | integer | Maximum party size seated at this table | `>= 1` |
-| `zone` | string | Optional operating zone or dining area label | Non-empty recommended |
 
 Rules:
 - One table serves one group at a time.
@@ -68,3 +78,4 @@ Rules:
 - Queue design lives in the restaurant config because single-queue versus size-based queueing is a structural restaurant choice in this coursework.
 - Reservation holding is also stored here because Pair 4 changes that factor while keeping seating/service policies fixed.
 - Times remain in human-readable `HH:MM` form in JSON and are converted to minutes internally by the loader.
+- Queue-template JSON files reuse this schema for convenience, but they should be read as abstract waitlist presets rather than literal restaurant floorplans.

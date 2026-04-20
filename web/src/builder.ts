@@ -52,6 +52,42 @@ function getPresetById<T extends { id: string }>(items: T[], id: string): T {
   return match
 }
 
+function maxTableCapacity(layout: JsonPreset<RestaurantPresetData>) {
+  return layout.data.tables.reduce((currentMax, table) => Math.max(currentMax, table.capacity), 0)
+}
+
+function compatibleArrivalScenariosForLayout(
+  layout: JsonPreset<RestaurantPresetData>,
+  presets: BuilderPresetsResponse,
+) {
+  const maxCapacity = maxTableCapacity(layout)
+  return presets.arrival_scenarios.filter((item) => item.max_group_size <= maxCapacity)
+}
+
+function normalizeArrivalScenarioId(
+  arrivalScenarioId: string,
+  layout: JsonPreset<RestaurantPresetData>,
+  presets: BuilderPresetsResponse,
+) {
+  const compatible = compatibleArrivalScenariosForLayout(layout, presets)
+  if (!compatible.length) {
+    return arrivalScenarioId
+  }
+  return compatible.some((item) => item.id === arrivalScenarioId) ? arrivalScenarioId : compatible[0].id
+}
+
+function assertArrivalCompatibility(
+  layout: JsonPreset<RestaurantPresetData>,
+  arrivals: CsvPreset,
+) {
+  const maxCapacity = maxTableCapacity(layout)
+  if (arrivals.max_group_size > maxCapacity) {
+    throw new Error(
+      `${layout.title} seats parties up to ${maxCapacity}, but ${arrivals.title} includes groups up to ${arrivals.max_group_size}.`,
+    )
+  }
+}
+
 function simplifyPresetTitle(title: string) {
   return title.trim()
 }
@@ -131,19 +167,40 @@ export function buildFormFromStarter(
   const layout =
     presets.restaurant_layouts.find((item) => item.id === starter.restaurantLayoutId) ??
     presets.restaurant_layouts[0]
+  const restaurantLayoutId = layout?.id ?? starter.restaurantLayoutId
+  const arrivalScenarioId = layout
+    ? normalizeArrivalScenarioId(starter.arrivalScenarioId, layout, presets)
+    : starter.arrivalScenarioId
 
   return {
     simulationStart: layout?.data.simulation_start ?? '11:00',
     simulationEnd: layout?.data.simulation_end ?? '22:30',
-    restaurantLayoutId: starter.restaurantLayoutId,
+    restaurantLayoutId,
     queueStructureId: starter.queueStructureId,
     reservationPolicyId: starter.reservationPolicyId,
     seatingPolicyId: starter.seatingPolicyId,
     servicePolicyId: starter.servicePolicyId,
-    arrivalScenarioId: starter.arrivalScenarioId,
+    arrivalScenarioId,
     holdMinutes: starter.holdMinutes,
     abandonmentEnabled: starter.abandonmentEnabled,
   }
+}
+
+export function compatibleArrivalScenarios(
+  presets: BuilderPresetsResponse,
+  layoutId: string,
+): CsvPreset[] {
+  const layout = getPresetById(presets.restaurant_layouts, layoutId)
+  return compatibleArrivalScenariosForLayout(layout, presets)
+}
+
+export function normalizeArrivalScenarioForLayout(
+  presets: BuilderPresetsResponse,
+  layoutId: string,
+  arrivalScenarioId: string,
+): string {
+  const layout = getPresetById(presets.restaurant_layouts, layoutId)
+  return normalizeArrivalScenarioId(arrivalScenarioId, layout, presets)
 }
 
 export function summarizeBuilderSelections(
@@ -256,6 +313,7 @@ export function buildCustomScenarioPayload(
   const seating = getPresetById(presets.seating_policies, form.seatingPolicyId)
   const service = getPresetById(presets.service_policies, form.servicePolicyId)
   const arrivals = getPresetById(presets.arrival_scenarios, form.arrivalScenarioId)
+  assertArrivalCompatibility(layout, arrivals)
 
   const config = {
     restaurant_name: layout.data.restaurant_name,

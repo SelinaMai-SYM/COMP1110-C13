@@ -41,7 +41,6 @@ class QueueDefinition:
 class TableSpec:
     table_id: str
     capacity: int
-    zone: str
 
 
 @dataclass(frozen=True)

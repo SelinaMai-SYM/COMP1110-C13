@@ -49,8 +49,12 @@ class ApiTests(unittest.TestCase):
         self.assertIn("service_policies", payload)
         self.assertIn("reservation_policies", payload)
         self.assertIn("arrival_scenarios", payload)
-        self.assertTrue(any(item["id"] == "restaurant_base" for item in payload["restaurant_layouts"]))
-        self.assertTrue(any(item["id"] == "restaurant_multi_queue" for item in payload["queue_structures"]))
+        self.assertGreaterEqual(len(payload["restaurant_layouts"]), 8)
+        self.assertGreaterEqual(len(payload["queue_structures"]), 4)
+        self.assertTrue(
+            any(item["id"] == "layout_bubble_tea_express" for item in payload["restaurant_layouts"])
+        )
+        self.assertTrue(any(item["id"] == "queue_balanced_size" for item in payload["queue_structures"]))
         self.assertTrue(any(item["id"] == "service_default" for item in payload["service_policies"]))
         self.assertTrue(
             any(
@@ -58,13 +62,20 @@ class ApiTests(unittest.TestCase):
                 for item in payload["reservation_policies"]
             )
         )
-        self.assertTrue(any(item["id"] == "dinner_peak_base" for item in payload["arrival_scenarios"]))
+        dinner_peak = next(item for item in payload["arrival_scenarios"] if item["id"] == "dinner_peak_base")
+        self.assertGreaterEqual(dinner_peak["row_count"], 30)
+        self.assertGreaterEqual(dinner_peak["max_group_size"], 6)
+        self.assertIn("row_count", dinner_peak)
+        self.assertIn("reservation_groups", dinner_peak)
 
     def test_custom_simulation_accepts_builder_style_payload(self) -> None:
         presets = self.client.get("/builder-presets").json()
 
-        layout = next(item for item in presets["restaurant_layouts"] if item["id"] == "restaurant_base")
-        queue = next(item for item in presets["queue_structures"] if item["id"] == "restaurant_multi_queue")
+        layout = next(
+            item for item in presets["restaurant_layouts"] if item["id"] == "layout_family_trattoria"
+        )
+        self.assertNotIn("zone", layout["data"]["tables"][0])
+        queue = next(item for item in presets["queue_structures"] if item["id"] == "queue_balanced_size")
         seating = next(item for item in presets["seating_policies"] if item["id"] == "seating_fcfs")
         service = next(item for item in presets["service_policies"] if item["id"] == "service_default")
         reservation = next(

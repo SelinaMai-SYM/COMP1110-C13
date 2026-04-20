@@ -1,17 +1,35 @@
 group_id,arrival_time,group_size,dining_duration,group_type,reservation_time,grace_period,no_show_flag,abandon_tolerance,notes
-R001,17:30,2,72,reservation,17:30,10,false,25,"on-time couple reservation"
-R002,17:36,4,82,walkin,,0,false,30,"early walk-in family"
-R003,17:42,3,76,reservation,17:40,10,false,25,"slightly late reservation"
-R004,17:50,2,65,walkin,,0,false,20,"walk-in pair"
-R005,17:55,5,90,reservation,17:50,10,true,35,"no-show birthday booking"
-R006,18:02,4,84,reservation,18:00,10,false,30,"booked family table"
-R007,18:08,2,68,walkin,,0,false,18,"after-work pair"
-R008,18:16,6,96,reservation,18:10,10,false,35,"late but within grace"
-R009,18:24,3,74,walkin,,0,false,22,"friends trio"
-R010,18:32,2,70,reservation,18:25,10,false,20,"late reservation couple"
-R011,18:40,4,86,walkin,,0,false,25,"shopping break group"
-R012,18:48,5,92,reservation,18:40,10,false,30,"reservation arriving near grace end"
-R013,18:56,2,62,walkin,,0,false,15,"quick pair"
-R014,19:05,4,88,reservation,19:00,10,false,28,"scheduled family"
-R015,19:14,3,72,walkin,,0,false,20,"walk-in trio"
-R016,19:27,2,68,reservation,19:15,10,false,22,"late arrival beyond grace"
+R001,17:30,2,76,reservation,17:30,10,false,24,on-time couple reservation
+R002,17:34,4,84,walkin,,0,false,28,early walk-in family
+R003,17:38,3,78,reservation,17:35,10,false,24,slightly late reservation
+R025,17:41,2,72,reservation,17:38,10,false,20,second late couple booking
+R004,17:43,2,68,walkin,,0,false,20,walk-in pair
+R005,17:47,5,92,reservation,17:45,10,true,32,no-show birthday booking
+R006,17:52,4,86,reservation,17:50,10,false,28,booked family table
+R007,17:57,2,70,walkin,,0,false,18,after-work pair
+R026,17:58,4,88,reservation,17:55,10,false,28,stacked family booking
+R008,18:02,6,98,reservation,18:00,10,false,34,late but within grace
+R009,18:07,3,74,walkin,,0,false,22,friends trio
+R027,18:09,2,66,walkin,,0,false,18,extra walk-in pair
+R010,18:12,2,72,reservation,18:05,10,false,20,late reservation couple
+R011,18:18,4,88,walkin,,0,false,24,shopping break group
+R028,18:21,5,96,reservation,18:18,10,true,30,second no-show large booking
+R012,18:24,5,94,reservation,18:15,10,false,30,reservation near grace end
+R013,18:30,2,66,walkin,,0,false,16,quick pair
+R029,18:33,3,76,walkin,,0,false,20,extra trio between bookings
+R014,18:36,4,90,reservation,18:30,10,false,26,scheduled family
+R015,18:42,3,76,walkin,,0,false,20,walk-in trio
+R030,18:45,4,90,reservation,18:40,10,false,26,late family reservation
+R016,18:49,2,70,reservation,18:35,10,false,20,late arrival beyond grace
+R017,18:56,4,88,walkin,,0,false,24,late family table
+R031,19:01,2,68,reservation,18:52,10,false,20,couple near grace end
+R018,19:03,3,78,reservation,19:00,10,false,22,tail-end reservation
+R019,19:10,2,64,walkin,,0,false,16,last walk-in pair
+R032,19:15,3,78,walkin,,0,false,20,late trio in hold window
+R020,19:18,5,96,reservation,19:10,10,true,30,no-show celebration table
+R021,19:26,4,86,reservation,19:20,10,false,26,late but seated booking
+R033,19:28,4,88,reservation,19:22,10,false,24,second late four-top booking
+R022,19:34,2,68,walkin,,0,false,18,closing pair
+R023,19:43,3,74,reservation,19:35,10,false,20,last-booked trio
+R034,19:44,2,64,walkin,,0,false,16,last walk-in pair before close
+R024,19:52,4,84,walkin,,0,false,22,tail-end family

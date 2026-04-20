@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import csv
 import json
+import os
 from io import StringIO
 from pathlib import Path
 from typing import Any, Callable
@@ -28,6 +29,13 @@ from .time_utils import parse_clock
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DATA_ROOT = REPO_ROOT / "data"
+
+
+def resolve_data_root(data_root: str | Path | None = None) -> Path:
+    if data_root is not None:
+        return Path(data_root)
+    configured = os.getenv("SIM_DATA_ROOT")
+    return Path(configured) if configured else DATA_ROOT
 
 
 def _parse_bool(value: str | bool) -> bool:
@@ -102,11 +110,10 @@ def _load_config(raw: dict[str, Any]) -> RestaurantConfig:
     table_ids: set[str] = set()
     tables: list[TableSpec] = []
     for entry in raw["tables"]:
-        _require_keys(entry, ["table_id", "capacity", "zone"], "table definition")
+        _require_keys(entry, ["table_id", "capacity"], "table definition")
         table = TableSpec(
             table_id=str(entry["table_id"]),
             capacity=int(entry["capacity"]),
-            zone=str(entry["zone"]),
         )
         if table.capacity < 1:
             raise ValueError(f"Invalid table capacity for {table.table_id}")
@@ -409,7 +416,7 @@ def _load_case_study_manifest(
     *,
     data_root: str | Path | None = None,
 ) -> tuple[dict[str, Any], Path]:
-    root = Path(data_root) if data_root else DATA_ROOT
+    root = resolve_data_root(data_root)
     manifest_path = _case_study_manifest_path(root, case_study)
     if not manifest_path.exists():
         raise FileNotFoundError(f"Missing case study manifest: {manifest_path}")
@@ -463,7 +470,7 @@ def _manifest_starter_version(manifest: dict[str, Any], version: str) -> CaseStu
 
 def _strip_preset_metadata(payload: dict[str, Any]) -> dict[str, Any]:
     cleaned = copy.deepcopy(payload)
-    for key in ["preset_id", "preset_family", "preset_order"]:
+    for key in ["preset_id", "preset_family"]:
         cleaned.pop(key, None)
     return cleaned
 
@@ -472,12 +479,15 @@ def _logical_preset_id(path: Path, payload: dict[str, Any]) -> str:
     return str(payload.get("preset_id") or path.stem)
 
 
-def _logical_preset_order(payload: dict[str, Any]) -> int:
-    raw_order = payload.get("preset_order", 999)
-    try:
-        return int(raw_order)
-    except (TypeError, ValueError):
-        return 999
+def _logical_preset_sort_key(path: Path, payload: dict[str, Any]) -> tuple[int, str, str]:
+    family_rank = {"restaurant_layout": 0, "queue_structure": 1}
+    family = str(payload.get("preset_family", "restaurant_layout"))
+    title = str(payload.get("restaurant_name") or path.stem).strip().lower()
+    return (
+        family_rank.get(family, 99),
+        title,
+        _logical_preset_id(path, payload),
+    )
 
 
 def _restaurant_config_entries(
@@ -494,10 +504,7 @@ def _restaurant_config_entries(
         entries.append((path, payload))
     return sorted(
         entries,
-        key=lambda item: (
-            _logical_preset_order(item[1]),
-            str(item[1].get("restaurant_name", item[0].stem)).lower(),
-        ),
+        key=lambda item: _logical_preset_sort_key(item[0], item[1]),
     )
 
 
@@ -595,7 +602,7 @@ def _resolve_case_study_payloads(
     *,
     data_root: str | Path | None = None,
 ) -> dict[str, Any]:
-    root = Path(data_root) if data_root else DATA_ROOT
+    root = resolve_data_root(data_root)
     normalized_version = _normalize_case_study_version(version)
     manifest, manifest_path = _load_case_study_manifest(case_study, data_root=root)
     starter = _manifest_starter_version(manifest, normalized_version)
@@ -663,7 +670,7 @@ def _resolve_case_study_payloads(
 
 
 def discover_case_studies(*, data_root: str | Path | None = None) -> list[CaseStudyMetadata]:
-    root = Path(data_root) if data_root else DATA_ROOT
+    root = resolve_data_root(data_root)
     case_root = root / "case_studies"
     case_studies: list[CaseStudyMetadata] = []
     for case_dir in sorted(path for path in case_root.iterdir() if path.is_dir()):
@@ -695,7 +702,7 @@ def discover_case_studies(*, data_root: str | Path | None = None) -> list[CaseSt
 
 
 def load_schema_documents(*, data_root: str | Path | None = None) -> dict[str, str]:
-    root = Path(data_root) if data_root else DATA_ROOT
+    root = resolve_data_root(data_root)
     schema_root = root / "schemas"
     return {
         schema_path.stem: schema_path.read_text(encoding="utf-8")
@@ -706,6 +713,28 @@ def load_schema_documents(*, data_root: str | Path | None = None) -> dict[str, s
 def _humanize_stem(stem: str) -> str:
     normalized = stem.removesuffix("_base")
     return " ".join(part.capitalize() for part in normalized.split("_"))
+
+
+def _summarize_arrival_groups(raw: str) -> dict[str, int]:
+    row_count = 0
+    max_group_size = 0
+    reservation_groups = 0
+    walkin_groups = 0
+    for row in csv.DictReader(StringIO(raw)):
+        row_count += 1
+        group_size = int(row.get("group_size") or 0)
+        group_type = str(row.get("group_type", "")).strip().lower()
+        max_group_size = max(max_group_size, group_size)
+        if group_type == GroupType.RESERVATION.value:
+            reservation_groups += 1
+        elif group_type == GroupType.WALKIN.value:
+            walkin_groups += 1
+    return {
+        "row_count": row_count,
+        "max_group_size": max_group_size,
+        "reservation_groups": reservation_groups,
+        "walkin_groups": walkin_groups,
+    }
 
 
 def _json_preset_record(
@@ -738,20 +767,30 @@ def _json_preset_record(
 
 def _csv_preset_record(path: Path) -> dict[str, object]:
     raw = path.read_text(encoding="utf-8")
-    lines = [line for line in raw.splitlines() if line.strip()]
-    row_count = max(len(lines) - 1, 0)
+    summary = _summarize_arrival_groups(raw)
+    row_count = int(summary["row_count"])
+    max_group_size = int(summary["max_group_size"])
+    reservation_groups = int(summary["reservation_groups"])
+    description_parts = [f"{row_count} arrival groups"]
+    if max_group_size > 0:
+        description_parts.append(f"up to {max_group_size} guests")
+    if reservation_groups > 0:
+        reservation_label = "reservation" if reservation_groups == 1 else "reservations"
+        description_parts.append(f"{reservation_groups} {reservation_label}")
+    else:
+        description_parts.append("walk-in only")
     return {
         "id": path.stem,
         "title": _humanize_stem(path.stem),
-        "description": f"{row_count} arrival groups",
+        "description": ", ".join(description_parts),
         "source_path": str(path),
         "raw": raw,
-        "row_count": row_count,
+        **summary,
     }
 
 
 def load_builder_presets(*, data_root: str | Path | None = None) -> dict[str, list[dict[str, object]]]:
-    root = Path(data_root) if data_root else DATA_ROOT
+    root = resolve_data_root(data_root)
     policy_root = root / "policies"
     arrivals_root = root / "arrival_scenarios"
     restaurant_layouts = _restaurant_config_entries(root, family="restaurant_layout")

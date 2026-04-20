@@ -1,7 +1,6 @@
 {
   "preset_id": "layout_korean_bbq",
   "preset_family": "restaurant_layout",
-  "preset_order": 6,
   "restaurant_name": "Seoul Fire BBQ House",
   "simulation_start": "11:00",
   "simulation_end": "22:30",
@@ -31,48 +30,83 @@
   "tables": [
     {
       "table_id": "K01",
-      "capacity": 4,
-      "zone": "Grill Row"
+      "capacity": 4
     },
     {
       "table_id": "K02",
-      "capacity": 4,
-      "zone": "Grill Row"
+      "capacity": 4
     },
     {
       "table_id": "K03",
-      "capacity": 4,
-      "zone": "Grill Row"
+      "capacity": 4
     },
     {
       "table_id": "K04",
-      "capacity": 4,
-      "zone": "Garden Grill"
+      "capacity": 4
     },
     {
       "table_id": "K05",
-      "capacity": 6,
-      "zone": "Garden Grill"
+      "capacity": 4
     },
     {
       "table_id": "K06",
-      "capacity": 6,
-      "zone": "Family Grill"
+      "capacity": 4
     },
     {
       "table_id": "K07",
-      "capacity": 6,
-      "zone": "Family Grill"
+      "capacity": 4
     },
     {
       "table_id": "K08",
-      "capacity": 8,
-      "zone": "Celebration Room"
+      "capacity": 4
     },
     {
       "table_id": "K09",
-      "capacity": 8,
-      "zone": "Celebration Room"
+      "capacity": 6
+    },
+    {
+      "table_id": "K10",
+      "capacity": 6
+    },
+    {
+      "table_id": "K11",
+      "capacity": 6
+    },
+    {
+      "table_id": "K12",
+      "capacity": 6
+    },
+    {
+      "table_id": "K13",
+      "capacity": 6
+    },
+    {
+      "table_id": "K14",
+      "capacity": 6
+    },
+    {
+      "table_id": "K15",
+      "capacity": 6
+    },
+    {
+      "table_id": "K16",
+      "capacity": 6
+    },
+    {
+      "table_id": "K17",
+      "capacity": 8
+    },
+    {
+      "table_id": "K18",
+      "capacity": 8
+    },
+    {
+      "table_id": "K19",
+      "capacity": 8
+    },
+    {
+      "table_id": "K20",
+      "capacity": 8
     }
   ],
   "table_sharing_allowed": false,
@@ -90,6 +124,6 @@
     "max_cleaning_actions_per_event_time": 2,
     "service_model": "interactive_grill_service",
     "signature_cuisine": "Korean barbecue",
-    "notes": "Each grill station turns slowly, so reset pace and cleaning bandwidth are central operational constraints."
+    "notes": "Large Korean BBQ room where grill tables turn slowly, so reset speed and cleaning capacity still shape throughput even with a larger floor."
   }
 }

@@ -1,8 +1,7 @@
 {
   "preset_id": "queue_single_line",
   "preset_family": "queue_structure",
-  "preset_order": 1,
-  "restaurant_name": "Single waitlist for all parties",
+  "restaurant_name": "Queue template: single waitlist for all parties",
   "simulation_start": "11:00",
   "simulation_end": "22:30",
   "queue_mode": "single",
@@ -15,24 +14,20 @@
   ],
   "tables": [
     {
-      "table_id": "Q01",
-      "capacity": 2,
-      "zone": "Reference"
+      "table_id": "S01",
+      "capacity": 2
     },
     {
-      "table_id": "Q02",
-      "capacity": 4,
-      "zone": "Reference"
+      "table_id": "S02",
+      "capacity": 4
     },
     {
-      "table_id": "Q03",
-      "capacity": 6,
-      "zone": "Reference"
+      "table_id": "S03",
+      "capacity": 6
     },
     {
-      "table_id": "Q04",
-      "capacity": 8,
-      "zone": "Reference"
+      "table_id": "S04",
+      "capacity": 8
     }
   ],
   "table_sharing_allowed": false,
@@ -48,6 +43,6 @@
   "optional_operational_defaults": {
     "max_seating_actions_per_event_time": 2,
     "max_cleaning_actions_per_event_time": 2,
-    "notes": "One shared line keeps the host stand simple and visibly fair, but it may slow table matching."
+    "notes": "Abstract queue template for the builder: everyone waits in one visible line regardless of party size."
   }
 }

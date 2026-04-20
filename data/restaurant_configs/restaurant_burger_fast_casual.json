@@ -1,7 +1,6 @@
 {
   "preset_id": "layout_burger_fast_casual",
   "preset_family": "restaurant_layout",
-  "preset_order": 3,
   "restaurant_name": "Ember Lane Burger Hall",
   "simulation_start": "11:00",
   "simulation_end": "22:30",
@@ -31,53 +30,83 @@
   "tables": [
     {
       "table_id": "G01",
-      "capacity": 2,
-      "zone": "Street Counter"
+      "capacity": 2
     },
     {
       "table_id": "G02",
-      "capacity": 2,
-      "zone": "Street Counter"
+      "capacity": 2
     },
     {
       "table_id": "G03",
-      "capacity": 2,
-      "zone": "Booth Lane"
+      "capacity": 2
     },
     {
       "table_id": "G04",
-      "capacity": 2,
-      "zone": "Booth Lane"
+      "capacity": 2
     },
     {
       "table_id": "G05",
-      "capacity": 4,
-      "zone": "Booth Lane"
+      "capacity": 2
     },
     {
       "table_id": "G06",
-      "capacity": 4,
-      "zone": "Main Floor"
+      "capacity": 2
     },
     {
       "table_id": "G07",
-      "capacity": 4,
-      "zone": "Main Floor"
+      "capacity": 4
     },
     {
       "table_id": "G08",
-      "capacity": 6,
-      "zone": "Main Floor"
+      "capacity": 4
     },
     {
       "table_id": "G09",
-      "capacity": 6,
-      "zone": "Patio"
+      "capacity": 4
     },
     {
       "table_id": "G10",
-      "capacity": 8,
-      "zone": "Community Table"
+      "capacity": 4
+    },
+    {
+      "table_id": "G11",
+      "capacity": 4
+    },
+    {
+      "table_id": "G12",
+      "capacity": 4
+    },
+    {
+      "table_id": "G13",
+      "capacity": 4
+    },
+    {
+      "table_id": "G14",
+      "capacity": 4
+    },
+    {
+      "table_id": "G15",
+      "capacity": 4
+    },
+    {
+      "table_id": "G16",
+      "capacity": 4
+    },
+    {
+      "table_id": "G17",
+      "capacity": 6
+    },
+    {
+      "table_id": "G18",
+      "capacity": 6
+    },
+    {
+      "table_id": "G19",
+      "capacity": 6
+    },
+    {
+      "table_id": "G20",
+      "capacity": 8
     }
   ],
   "table_sharing_allowed": false,
@@ -95,6 +124,6 @@
     "max_cleaning_actions_per_event_time": 3,
     "service_model": "fast_casual",
     "signature_cuisine": "burgers, fries, and shakes",
-    "notes": "Quick-turn floor with booths for families and a communal table for peak student rushes."
+    "notes": "Fast-casual burger hall with many two-top and four-top tables, a few family booths, and only a small amount of flexible larger seating."
   }
 }

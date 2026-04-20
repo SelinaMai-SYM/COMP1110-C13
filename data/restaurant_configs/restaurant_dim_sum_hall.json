@@ -1,7 +1,6 @@
 {
   "preset_id": "layout_dim_sum_hall",
   "preset_family": "restaurant_layout",
-  "preset_order": 7,
   "restaurant_name": "Pearl River Dim Sum Hall",
   "simulation_start": "11:00",
   "simulation_end": "22:30",
@@ -31,48 +30,99 @@
   "tables": [
     {
       "table_id": "M01",
-      "capacity": 2,
-      "zone": "Tea Corner"
+      "capacity": 2
     },
     {
       "table_id": "M02",
-      "capacity": 4,
-      "zone": "Lantern Room"
+      "capacity": 2
     },
     {
       "table_id": "M03",
-      "capacity": 4,
-      "zone": "Lantern Room"
+      "capacity": 4
     },
     {
       "table_id": "M04",
-      "capacity": 4,
-      "zone": "Lantern Room"
+      "capacity": 4
     },
     {
       "table_id": "M05",
-      "capacity": 6,
-      "zone": "Banquet Floor"
+      "capacity": 4
     },
     {
       "table_id": "M06",
-      "capacity": 6,
-      "zone": "Banquet Floor"
+      "capacity": 4
     },
     {
       "table_id": "M07",
-      "capacity": 8,
-      "zone": "Banquet Floor"
+      "capacity": 4
     },
     {
       "table_id": "M08",
-      "capacity": 8,
-      "zone": "Banquet Floor"
+      "capacity": 4
     },
     {
       "table_id": "M09",
-      "capacity": 8,
-      "zone": "Harbour Room"
+      "capacity": 4
+    },
+    {
+      "table_id": "M10",
+      "capacity": 4
+    },
+    {
+      "table_id": "M11",
+      "capacity": 6
+    },
+    {
+      "table_id": "M12",
+      "capacity": 6
+    },
+    {
+      "table_id": "M13",
+      "capacity": 6
+    },
+    {
+      "table_id": "M14",
+      "capacity": 6
+    },
+    {
+      "table_id": "M15",
+      "capacity": 6
+    },
+    {
+      "table_id": "M16",
+      "capacity": 6
+    },
+    {
+      "table_id": "M17",
+      "capacity": 6
+    },
+    {
+      "table_id": "M18",
+      "capacity": 6
+    },
+    {
+      "table_id": "M19",
+      "capacity": 8
+    },
+    {
+      "table_id": "M20",
+      "capacity": 8
+    },
+    {
+      "table_id": "M21",
+      "capacity": 8
+    },
+    {
+      "table_id": "M22",
+      "capacity": 8
+    },
+    {
+      "table_id": "M23",
+      "capacity": 8
+    },
+    {
+      "table_id": "M24",
+      "capacity": 8
     }
   ],
   "table_sharing_allowed": false,
@@ -90,6 +140,6 @@
     "max_cleaning_actions_per_event_time": 2,
     "service_model": "cart_service",
     "signature_cuisine": "Cantonese dim sum and banquet dining",
-    "notes": "Large round-table venue built for family groups, weekend banquets, and reservation-heavy brunch traffic."
+    "notes": "Dim sum hall with many medium and large banquet tables, but still enough variation that queue resolution matters during heavy family demand."
   }
 }

@@ -1,7 +1,6 @@
 {
   "preset_id": "layout_dessert_cafe",
   "preset_family": "restaurant_layout",
-  "preset_order": 2,
   "restaurant_name": "Moonlight Dessert Studio",
   "simulation_start": "11:00",
   "simulation_end": "22:30",
@@ -31,53 +30,67 @@
   "tables": [
     {
       "table_id": "D01",
-      "capacity": 2,
-      "zone": "Cake Bar"
+      "capacity": 2
     },
     {
       "table_id": "D02",
-      "capacity": 2,
-      "zone": "Cake Bar"
+      "capacity": 2
     },
     {
       "table_id": "D03",
-      "capacity": 2,
-      "zone": "Window Nook"
+      "capacity": 2
     },
     {
       "table_id": "D04",
-      "capacity": 2,
-      "zone": "Window Nook"
+      "capacity": 2
     },
     {
       "table_id": "D05",
-      "capacity": 4,
-      "zone": "Main Lounge"
+      "capacity": 2
     },
     {
       "table_id": "D06",
-      "capacity": 4,
-      "zone": "Main Lounge"
+      "capacity": 2
     },
     {
       "table_id": "D07",
-      "capacity": 4,
-      "zone": "Garden Veranda"
+      "capacity": 4
     },
     {
       "table_id": "D08",
-      "capacity": 4,
-      "zone": "Garden Veranda"
+      "capacity": 4
     },
     {
       "table_id": "D09",
-      "capacity": 6,
-      "zone": "Celebration Booth"
+      "capacity": 4
     },
     {
       "table_id": "D10",
-      "capacity": 8,
-      "zone": "Dessert Salon"
+      "capacity": 4
+    },
+    {
+      "table_id": "D11",
+      "capacity": 4
+    },
+    {
+      "table_id": "D12",
+      "capacity": 4
+    },
+    {
+      "table_id": "D13",
+      "capacity": 6
+    },
+    {
+      "table_id": "D14",
+      "capacity": 6
+    },
+    {
+      "table_id": "D15",
+      "capacity": 8
+    },
+    {
+      "table_id": "D16",
+      "capacity": 8
     }
   ],
   "table_sharing_allowed": false,
@@ -95,6 +108,6 @@
     "max_cleaning_actions_per_event_time": 2,
     "service_model": "dessert_lounge",
     "signature_cuisine": "cakes, parfaits, and specialty coffee",
-    "notes": "Sweet-service room tilted toward couples and small groups, with a single salon table for celebrations."
+    "notes": "Dessert cafe built around pairs and small friend groups, with only a few larger tables reserved for celebrations or shared platters."
   }
 }

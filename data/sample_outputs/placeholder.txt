@@ -1,5 +1,4 @@
-Sample outputs are illustrative only.
+Sample outputs are simulator-generated snapshots from the current shared scenario library.
 
-- `metrics_example_pair_01.csv` and `metrics_example_pair_02.csv` show the expected schema for paired comparisons.
-- These files are format references for later simulator integration.
-- The current notebook focuses on browsing scenario inputs rather than generating metrics.
+- `metrics_example_pair_01.csv`, `metrics_example_pair_02.csv`, and `metrics_example_pair_07.csv` show the standard paired-comparison schema using the latest official case studies.
+- For the complete regenerated batch, see `code/outputs/case_study_metrics.csv` and `code/outputs/case_study_comparisons.json`.

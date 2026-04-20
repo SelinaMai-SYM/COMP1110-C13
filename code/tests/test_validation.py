@@ -13,7 +13,7 @@ MINIMAL_CONFIG = json.dumps(
         "simulation_end": "13:00",
         "queue_mode": "single",
         "queue_definitions": [{"queue_id": "Q_ALL", "min_size": 1, "max_size": 10}],
-        "tables": [{"table_id": "T01", "capacity": 4, "zone": "Main"}],
+        "tables": [{"table_id": "T01", "capacity": 4}],
         "table_sharing_allowed": False,
         "table_combining_allowed": False,
         "reservation_hold_policy": {"enabled": True, "hold_minutes": 10},

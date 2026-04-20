@@ -1,17 +1,29 @@
 group_id,arrival_time,group_size,dining_duration,group_type,reservation_time,grace_period,no_show_flag,abandon_tolerance,notes
-L001,11:35,2,38,walkin,,0,false,20,"early office pair"
-L002,11:38,4,52,reservation,11:40,10,false,25,"team lunch booking"
-L003,11:44,1,30,walkin,,0,false,15,"solo diner"
-L004,11:48,3,45,walkin,,0,false,20,"friends before class"
-L005,11:55,2,40,reservation,11:50,10,false,25,"late reservation pair"
-L006,12:00,5,70,walkin,,0,false,30,"extended family lunch"
-L007,12:06,2,35,walkin,,0,false,20,"quick lunch pair"
-L008,12:12,4,60,walkin,,0,false,30,"coworker table"
-L009,12:18,6,75,reservation,12:15,10,false,35,"birthday lunch group"
-L010,12:24,3,50,walkin,,0,false,20,"students between classes"
-L011,12:31,2,42,walkin,,0,false,18,"late office pair"
-L012,12:40,5,65,walkin,,0,false,25,"family with teens"
-L013,12:48,4,55,reservation,12:45,10,false,30,"booked catch-up meal"
-L014,12:56,2,40,walkin,,0,false,20,"short lunch stop"
-L015,13:04,3,48,walkin,,0,false,18,"afternoon arrivals"
-L016,13:10,2,35,walkin,,0,false,15,"final lunch pair"
+L001,11:28,2,36,walkin,,0,false,20,early office pair
+L002,11:31,1,28,walkin,,0,false,16,solo noodle stop
+L003,11:34,4,50,reservation,11:35,10,false,24,team lunch booking
+L004,11:37,2,34,walkin,,0,false,18,quick lunch pair
+L005,11:40,3,44,walkin,,0,false,20,friends before class
+L006,11:43,2,37,walkin,,0,false,18,late meeting pair
+L007,11:46,5,62,walkin,,0,false,28,extended family lunch
+L008,11:49,1,26,walkin,,0,false,14,counter solo
+L009,11:52,2,35,reservation,11:50,10,false,24,late reservation pair
+L010,11:55,4,54,walkin,,0,false,26,coworker table
+L011,11:58,3,46,walkin,,0,false,20,students between classes
+L012,12:01,2,33,walkin,,0,false,18,short lunch stop
+L013,12:04,6,72,reservation,12:05,10,false,30,birthday lunch group
+L014,12:07,2,34,walkin,,0,false,18,quick pair
+L015,12:10,4,56,walkin,,0,false,24,department table
+L016,12:13,1,27,walkin,,0,false,14,solo regular
+L017,12:16,3,45,walkin,,0,false,20,late trio
+L018,12:19,2,36,reservation,12:20,10,false,24,on-time booking pair
+L019,12:23,5,64,walkin,,0,false,28,family with teens
+L020,12:27,2,34,walkin,,0,false,18,short office pair
+L021,12:31,4,55,walkin,,0,false,24,colleagues after seminar
+L022,12:36,3,44,walkin,,0,false,20,mid-rush trio
+L023,12:41,2,35,reservation,12:40,10,false,22,booked catch-up meal
+L024,12:47,1,25,walkin,,0,false,14,final solo diner
+L025,12:53,4,52,walkin,,0,false,22,late family table
+L026,12:59,2,34,walkin,,0,false,18,afternoon pair
+L027,13:06,3,42,walkin,,0,false,18,tail-end trio
+L028,13:14,2,32,walkin,,0,false,16,final lunch pair
