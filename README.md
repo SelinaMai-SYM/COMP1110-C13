@@ -21,8 +21,7 @@ COMP-1110-C08/
 ├── code/                    # Python simulator, CLI runner, FastAPI backend, and tests
 ├── data/                    # Shared configs, arrivals, policies, case studies, schemas, sample outputs
 ├── notebook/                # Data catalog and guided scenario analysis notebooks
-├── web/                     # React + Vite dashboard for interactive comparison
-└── 报告生成/                 # Report, project guideline PDF, and video demo script
+└── web/                     # React + Vite dashboard for interactive comparison
 ```
 
 Important files:
