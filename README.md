@@ -120,10 +120,11 @@ The dashboard supports:
 - guided preset selection without editing raw JSON/CSV;
 - metric cards, charts, and comparison tables for aggregate outputs. Richer traces such as event logs, queue snapshots, group outcomes, and table activity are returned by the backend and can be inspected through code or notebook workflows, but are not fully visualized in the current dashboard.
 
-Production URLs currently documented in `web/README.md`:
+Production URL:
 
-- Frontend: `https://comp-1110-c08-dashboard.onrender.com`
-- Backend API: `https://comp-1110-c08.onrender.com`
+- Web dashboard: `https://comp-1110-c08-dashboard.onrender.com`
+
+Open the web dashboard URL in a browser to use the project.
 
 ## Running The Notebooks
 

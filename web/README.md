@@ -36,9 +36,8 @@ npm run preview
 
 Render deployment notes live in [DEPLOYMENT.md](./DEPLOYMENT.md). The repository includes a Render service definition at [`web/render.yaml`](./render.yaml).
 
-Production URLs currently in use:
+Production URL currently in use:
 
-- Frontend: `https://comp-1110-c08-dashboard.onrender.com`
-- Backend API: `https://comp-1110-c08.onrender.com`
+- Web dashboard: `https://comp-1110-c08-dashboard.onrender.com`
 
-As long as those Render service names stay unchanged, these `.onrender.com` URLs remain the fixed addresses for opening the dashboard and calling the API.
+As long as the Render service name stays unchanged, this `.onrender.com` URL remains the fixed address for opening the dashboard.
