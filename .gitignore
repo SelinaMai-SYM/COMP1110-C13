@@ -7,6 +7,5 @@ code/outputs/
 web/node_modules/
 web/dist/
 web/.env
-报告生成/
 project.ipynb
 pseudocode/
