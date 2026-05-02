@@ -1,6 +1,6 @@
-# COMP-1110-C08 Restaurant Queue Simulation
+# COMP-1110-C13 Restaurant Queue Simulation
 
-This repository contains the COMP1110 C08 group project for **Topic C: Restaurant Queue Simulation**. The project models restaurant queue management as a data and simulation problem. It compares how restaurant layouts, queue structures, reservation rules, seating policies, cleaning capacity, and customer abandonment affect waiting time, queue length, service outcomes, and table utilization.
+This repository contains the COMP1110 C13 group project for **Topic C: Restaurant Queue Simulation**. The project models restaurant queue management as a data and simulation problem. It compares how restaurant layouts, queue structures, reservation rules, seating policies, cleaning capacity, and customer abandonment affect waiting time, queue length, service outcomes, and table utilization.
 
 The implementation is intentionally file-based and reproducible. The Python simulator, notebooks, FastAPI backend, and React dashboard all read from the same shared `data/` library and official A/B case-study manifests.
 
@@ -17,7 +17,7 @@ The system supports the main Topic C requirements:
 ## Repository Structure
 
 ```text
-COMP-1110-C08/
+COMP-1110-C13/
 ├── code/                    # Python simulator, CLI runner, FastAPI backend, and tests
 ├── data/                    # Shared configs, arrivals, policies, case studies, schemas, sample outputs
 ├── notebook/                # Data catalog and guided scenario analysis notebooks
