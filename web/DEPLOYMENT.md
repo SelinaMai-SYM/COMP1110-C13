@@ -30,13 +30,13 @@ Open `http://127.0.0.1:4173`.
 
 The Render service definition lives at `web/render.yaml` and defines:
 
-1. `COMP-1110-C08` as the Python web service.
-2. `comp-1110-c08-dashboard` as the static React site.
+1. `COMP-1110-C13` as the Python web service.
+2. `comp-1110-c13-dashboard` as the static React site.
 
 Current stable public URLs:
 
-- Backend API: `https://comp-1110-c08.onrender.com`
-- Frontend dashboard: `https://comp-1110-c08-dashboard.onrender.com`
+- Backend API: `https://comp-1110-c13.onrender.com`
+- Frontend dashboard: `https://comp-1110-c13-dashboard.onrender.com`
 
 You can deploy with either:
 

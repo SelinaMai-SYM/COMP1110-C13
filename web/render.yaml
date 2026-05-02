@@ -6,7 +6,7 @@
 #   Render-managed web and static services for the project.
 services:
   - type: web
-    name: COMP-1110-C08
+    name: COMP-1110-C13
     env: python
     rootDir: code
     buildCommand: pip install -r requirements.txt
@@ -16,10 +16,10 @@ services:
         value: 3.13.3
 
   - type: static
-    name: comp-1110-c08-dashboard
+    name: comp-1110-c13-dashboard
     rootDir: web
     buildCommand: npm install && npm run build
     staticPublishPath: dist
     envVars:
       - key: VITE_API_BASE_URL
-        value: https://comp-1110-c08.onrender.com
+        value: https://comp-1110-c13.onrender.com
