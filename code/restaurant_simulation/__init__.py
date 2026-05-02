@@ -1,3 +1,10 @@
+# What it does:
+#   Defines the public package surface for the restaurant simulation toolkit.
+# Inputs:
+#   Importers that need loaders, runners, or data-root helpers.
+# Outputs:
+#   Re-exported names listed in __all__.
+
 from .loading import (
     discover_case_studies,
     load_builder_presets,

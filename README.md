@@ -36,7 +36,7 @@ Important files:
 
 ## Environment
 
-The backend and notebooks use Python 3.11. The web dashboard uses Node.js/npm with React and Vite.
+The backend and notebooks were developed for Python 3.11. The deployed backend may use a compatible newer Python runtime. The web dashboard uses Node.js/npm with React and Vite.
 
 Install Python dependencies:
 
@@ -67,7 +67,7 @@ From the `code/` directory, run all official A/B case studies:
 python3 -m restaurant_simulation.cli --run-all
 ```
 
-This writes:
+This creates or refreshes local output files:
 
 - `code/outputs/case_study_metrics.csv`
 - `code/outputs/case_study_comparisons.json`
@@ -118,7 +118,7 @@ The dashboard supports:
 - prepared official A/B scenario comparisons;
 - custom Option A vs Option B comparisons;
 - guided preset selection without editing raw JSON/CSV;
-- metric cards, charts, event logs, queue snapshots, group outcomes, and table activity views.
+- metric cards, charts, and comparison tables for aggregate outputs. Richer traces such as event logs, queue snapshots, group outcomes, and table activity are returned by the backend and can be inspected through code or notebook workflows, but are not fully visualized in the current dashboard.
 
 Production URLs currently documented in `web/README.md`:
 
@@ -166,7 +166,7 @@ The `data/` directory is the shared source of truth:
 - `policies/`: seating, service, and reservation-control policies.
 - `case_studies/`: seven official A/B scenario manifests.
 - `schemas/`: reference documents for input and output formats.
-- `sample_outputs/`: example metric CSV outputs.
+- `sample_outputs/`: selected example metric CSV outputs.
 
 The seven official A/B pairs are:
 
@@ -187,5 +187,5 @@ The standard metric schema is documented in `data/schemas/metrics_schema.md`. Th
 ## Notes For Reproducibility
 
 - The notebooks, CLI, API, and web dashboard all resolve official cases from the same `data/case_studies/*/case_study.json` manifests.
-- Batch outputs in `code/outputs/` can be regenerated with `python3 -m restaurant_simulation.cli --run-all`.
+- Batch outputs in `code/outputs/` can be regenerated locally with `python3 -m restaurant_simulation.cli --run-all`; they may not be present before running the command.
 - `SIM_DATA_ROOT` can be used to point all Python entry points to an alternate data root when needed.

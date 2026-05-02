@@ -1,11 +1,25 @@
 from __future__ import annotations
 
+# What it does:
+#   Provides a command-line entry point for running official simulations.
+# Inputs:
+#   CLI arguments for all case studies or a single case-study version.
+# Outputs:
+#   Printed JSON metrics or comparison payloads.
+
 import argparse
 import json
 
 from .loading import load_case_study
 from .runners import run_all_case_studies, run_scenario
 
+
+# What it does:
+#   Parses command-line options and dispatches the requested simulation run.
+# Inputs:
+#   Process arguments from argparse.
+# Outputs:
+#   Printed JSON output or an argparse usage error.
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Restaurant queue simulation toolkit")

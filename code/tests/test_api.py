@@ -1,5 +1,12 @@
 from __future__ import annotations
 
+# What it does:
+#   Checks the FastAPI surface used by the dashboard.
+# Inputs:
+#   TestClient requests against the in-process app.
+# Outputs:
+#   Assertions about status codes and JSON payload shapes.
+
 import json
 import unittest
 
@@ -8,15 +15,43 @@ from fastapi.testclient import TestClient
 from restaurant_simulation.api import app
 
 
+# What it does:
+#   Groups API contract tests for health, presets, official runs, and custom runs.
+# Inputs:
+#   An in-process FastAPI TestClient.
+# Outputs:
+#   Test assertions for route behaviour and response structure.
+
 class ApiTests(unittest.TestCase):
     @classmethod
+    # What it does:
+    #   Creates the shared API client once for the test class.
+    # Inputs:
+    #   The FastAPI application object.
+    # Outputs:
+    #   A TestClient stored on the test class.
+
     def setUpClass(cls) -> None:
         cls.client = TestClient(app)
+
+    # What it does:
+    #   Verifies that the health endpoint responds successfully.
+    # Inputs:
+    #   A GET request to /health.
+    # Outputs:
+    #   Status 200 and an ok status field.
 
     def test_healthcheck(self) -> None:
         response = self.client.get("/health")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "ok")
+
+    # What it does:
+    #   Verifies that the API can compare both versions of an official case study.
+    # Inputs:
+    #   A POST body naming a case study with compare_both enabled.
+    # Outputs:
+    #   Status 200 and A/B result sections.
 
     def test_compare_case_study(self) -> None:
         response = self.client.post(
@@ -31,6 +66,13 @@ class ApiTests(unittest.TestCase):
         self.assertIn("A", payload)
         self.assertIn("B", payload)
 
+    # What it does:
+    #   Verifies that raw official scenario inputs are exposed for the dashboard.
+    # Inputs:
+    #   A GET request for pair_01 version A inputs.
+    # Outputs:
+    #   Status 200 and config, arrivals, and policy fields.
+
     def test_case_study_inputs(self) -> None:
         response = self.client.get("/case-studies/pair_01_table_mix/A/inputs")
         self.assertEqual(response.status_code, 200)
@@ -38,6 +80,13 @@ class ApiTests(unittest.TestCase):
         self.assertIn("config_json", payload)
         self.assertIn("arrivals_csv", payload)
         self.assertIn("policy_json", payload)
+
+    # What it does:
+    #   Verifies that builder preset catalogs include the expected groups and sample records.
+    # Inputs:
+    #   A GET request to /builder-presets.
+    # Outputs:
+    #   Status 200 plus known preset ids and summary fields.
 
     def test_builder_presets(self) -> None:
         response = self.client.get("/builder-presets")
@@ -67,6 +116,13 @@ class ApiTests(unittest.TestCase):
         self.assertGreaterEqual(dinner_peak["max_group_size"], 6)
         self.assertIn("row_count", dinner_peak)
         self.assertIn("reservation_groups", dinner_peak)
+
+    # What it does:
+    #   Verifies that dashboard-style builder selections can run as a custom scenario.
+    # Inputs:
+    #   Preset records transformed into config, policy, and arrivals payloads.
+    # Outputs:
+    #   Status 200 plus scenario, metrics, and queue snapshot fields.
 
     def test_custom_simulation_accepts_builder_style_payload(self) -> None:
         presets = self.client.get("/builder-presets").json()

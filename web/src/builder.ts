@@ -12,7 +12,25 @@ import type {
   ServicePolicyPresetData,
 } from './types'
 
+/*
+- What it does:
+  Transforms preset catalogs and form state into custom simulation payloads.
+- Inputs:
+  Builder presets, starter case-study metadata, and form selections.
+- Outputs:
+  Normalized form state, overview rows, notes, and API-ready custom scenario payloads.
+*/
+
 type StarterVersion = 'A' | 'B'
+
+/*
+- What it does:
+  Defines the starter preset data contract.
+- Inputs:
+  Values exchanged between the API, builder, and React UI.
+- Outputs:
+  A TypeScript type used for compile-time checking.
+*/
 
 type StarterPreset = Pick<
   BuilderFormState,
@@ -25,6 +43,15 @@ type StarterPreset = Pick<
   | 'holdMinutes'
   | 'abandonmentEnabled'
 >
+
+/*
+- What it does:
+  Defines the case study overview row data contract.
+- Inputs:
+  Values exchanged between the API, builder, and React UI.
+- Outputs:
+  A TypeScript type used for compile-time checking.
+*/
 
 export interface CaseStudyOverviewRow {
   label: string
@@ -44,6 +71,15 @@ const FALLBACK_STARTER: StarterPreset = {
   abandonmentEnabled: false,
 }
 
+/*
+- What it does:
+  Finds one preset by id and fails loudly if the catalog is inconsistent.
+- Inputs:
+  A preset list and expected id.
+- Outputs:
+  The matching preset record.
+*/
+
 function getPresetById<T extends { id: string }>(items: T[], id: string): T {
   const match = items.find((item) => item.id === id)
   if (!match) {
@@ -52,9 +88,27 @@ function getPresetById<T extends { id: string }>(items: T[], id: string): T {
   return match
 }
 
+/*
+- What it does:
+  Finds the largest party size supported by a restaurant layout.
+- Inputs:
+  A restaurant layout preset.
+- Outputs:
+  The maximum table capacity.
+*/
+
 function maxTableCapacity(layout: JsonPreset<RestaurantPresetData>) {
   return layout.data.tables.reduce((currentMax, table) => Math.max(currentMax, table.capacity), 0)
 }
+
+/*
+- What it does:
+  Filters arrival presets to those supported by a layout capacity.
+- Inputs:
+  A layout preset and full builder preset catalog.
+- Outputs:
+  Arrival scenario presets whose max group size fits.
+*/
 
 function compatibleArrivalScenariosForLayout(
   layout: JsonPreset<RestaurantPresetData>,
@@ -63,6 +117,15 @@ function compatibleArrivalScenariosForLayout(
   const maxCapacity = maxTableCapacity(layout)
   return presets.arrival_scenarios.filter((item) => item.max_group_size <= maxCapacity)
 }
+
+/*
+- What it does:
+  Keeps or replaces an arrival scenario id so it fits the selected layout.
+- Inputs:
+  The current arrival id, selected layout, and preset catalog.
+- Outputs:
+  A compatible arrival scenario id.
+*/
 
 function normalizeArrivalScenarioId(
   arrivalScenarioId: string,
@@ -76,6 +139,15 @@ function normalizeArrivalScenarioId(
   return compatible.some((item) => item.id === arrivalScenarioId) ? arrivalScenarioId : compatible[0].id
 }
 
+/*
+- What it does:
+  Validates that a selected arrival scenario fits the selected layout.
+- Inputs:
+  A layout preset and arrival CSV preset.
+- Outputs:
+  No value; throws when max group size exceeds table capacity.
+*/
+
 function assertArrivalCompatibility(
   layout: JsonPreset<RestaurantPresetData>,
   arrivals: CsvPreset,
@@ -88,9 +160,27 @@ function assertArrivalCompatibility(
   }
 }
 
+/*
+- What it does:
+  Performs the simplify preset title UI or data transformation step.
+- Inputs:
+  The arguments declared by the function signature.
+- Outputs:
+  A computed value, rendered component, or state update result.
+*/
+
 function simplifyPresetTitle(title: string) {
   return title.trim()
 }
+
+/*
+- What it does:
+  Performs the describe reservation handling UI or data transformation step.
+- Inputs:
+  The arguments declared by the function signature.
+- Outputs:
+  A computed value, rendered component, or state update result.
+*/
 
 function describeReservationHandling(
   preset: JsonPreset<ReservationPolicyPresetData>,
@@ -102,9 +192,27 @@ function describeReservationHandling(
   return `Booked tables stay protected for ${holdMinutes} minutes`
 }
 
+/*
+- What it does:
+  Performs the describe walk away setting UI or data transformation step.
+- Inputs:
+  The arguments declared by the function signature.
+- Outputs:
+  A computed value, rendered component, or state update result.
+*/
+
 function describeWalkAwaySetting(enabled: boolean) {
   return enabled ? 'Parties may leave after a long wait' : 'Parties stay on the waitlist until seated'
 }
+
+/*
+- What it does:
+  Performs the next notes UI or data transformation step.
+- Inputs:
+  The arguments declared by the function signature.
+- Outputs:
+  A computed value, rendered component, or state update result.
+*/
 
 function nextNotes(
   layout: JsonPreset<RestaurantPresetData>,
@@ -124,6 +232,15 @@ function nextNotes(
   ].join(' | ')
 }
 
+/*
+- What it does:
+  Performs the service policy name UI or data transformation step.
+- Inputs:
+  The arguments declared by the function signature.
+- Outputs:
+  A computed value, rendered component, or state update result.
+*/
+
 function servicePolicyName(baseName: string, abandonmentEnabled: boolean) {
   if (!abandonmentEnabled || baseName.toLowerCase().includes('abandonment')) {
     return baseName
@@ -131,12 +248,30 @@ function servicePolicyName(baseName: string, abandonmentEnabled: boolean) {
   return `${baseName} with Abandonment`
 }
 
+/*
+- What it does:
+  Performs the starter version UI or data transformation step.
+- Inputs:
+  The arguments declared by the function signature.
+- Outputs:
+  A computed value, rendered component, or state update result.
+*/
+
 function starterVersion(
   caseStudy: CaseStudyMetadata | null | undefined,
   version: StarterVersion,
 ): CaseStudyStarterVersion | null {
   return caseStudy?.starter_versions?.[version] ?? null
 }
+
+/*
+- What it does:
+  Performs the normalize starter UI or data transformation step.
+- Inputs:
+  The arguments declared by the function signature.
+- Outputs:
+  A computed value, rendered component, or state update result.
+*/
 
 function normalizeStarter(
   caseStudy: CaseStudyMetadata | null | undefined,
@@ -157,6 +292,15 @@ function normalizeStarter(
     abandonmentEnabled: starter.abandonment_enabled,
   }
 }
+
+/*
+- What it does:
+  Creates builder form state from an official case-study starter version.
+- Inputs:
+  Case-study metadata, version label, and builder presets.
+- Outputs:
+  A normalized BuilderFormState.
+*/
 
 export function buildFormFromStarter(
   caseStudy: CaseStudyMetadata | null | undefined,
@@ -186,6 +330,15 @@ export function buildFormFromStarter(
   }
 }
 
+/*
+- What it does:
+  Returns arrival presets compatible with the form selected layout.
+- Inputs:
+  Builder presets and current form state.
+- Outputs:
+  A filtered arrival preset list.
+*/
+
 export function compatibleArrivalScenarios(
   presets: BuilderPresetsResponse,
   layoutId: string,
@@ -193,6 +346,15 @@ export function compatibleArrivalScenarios(
   const layout = getPresetById(presets.restaurant_layouts, layoutId)
   return compatibleArrivalScenariosForLayout(layout, presets)
 }
+
+/*
+- What it does:
+  Adjusts form state after layout changes to keep arrivals compatible.
+- Inputs:
+  Builder presets and current form state.
+- Outputs:
+  A form state with a compatible arrival scenario id.
+*/
 
 export function normalizeArrivalScenarioForLayout(
   presets: BuilderPresetsResponse,
@@ -202,6 +364,15 @@ export function normalizeArrivalScenarioForLayout(
   const layout = getPresetById(presets.restaurant_layouts, layoutId)
   return normalizeArrivalScenarioId(arrivalScenarioId, layout, presets)
 }
+
+/*
+- What it does:
+  Builds human-readable notes from current builder selections.
+- Inputs:
+  Builder presets and form state.
+- Outputs:
+  A semicolon-separated scenario summary string.
+*/
 
 export function summarizeBuilderSelections(
   form: BuilderFormState,
@@ -232,6 +403,15 @@ export function summarizeBuilderSelections(
   ]
   return `Built around a ${parts.join(', ')}.`
 }
+
+/*
+- What it does:
+  Builds A/B overview rows for official case-study starter settings.
+- Inputs:
+  Case-study metadata and builder presets.
+- Outputs:
+  Rows marking which selections differ between A and B.
+*/
 
 export function buildCaseStudyOverviewRows(
   caseStudy: CaseStudyMetadata | null | undefined,
@@ -302,6 +482,15 @@ export function buildCaseStudyOverviewRows(
   return rows.sort((left, right) => Number(right.changed) - Number(left.changed))
 }
 
+/*
+- What it does:
+  Converts builder form state into backend custom simulation input strings.
+- Inputs:
+  Builder presets, form state, and scenario name.
+- Outputs:
+  A CustomScenarioPayload containing config JSON, policy JSON, and arrivals CSV.
+*/
+
 export function buildCustomScenarioPayload(
   form: BuilderFormState,
   presets: BuilderPresetsResponse,
@@ -362,6 +551,15 @@ export function buildCustomScenarioPayload(
     arrivals_csv: arrivals.raw,
   }
 }
+
+/*
+- What it does:
+  Builds side-by-side overview rows for custom A/B builder selections.
+- Inputs:
+  Builder presets plus form state for sides A and B.
+- Outputs:
+  Rows marking changed and unchanged custom selections.
+*/
 
 export function buildCustomComparisonRows(
   formA: BuilderFormState,

@@ -1,3 +1,12 @@
+/*
+- What it does:
+  Defines the global dark theme, reset styles, and dashboard layout system.
+- Inputs:
+  CSS custom properties, browser defaults, and React-rendered class names.
+- Outputs:
+  Visual styling for the restaurant comparison dashboard.
+*/
+
 :root {
   color-scheme: dark;
   font-family:
@@ -102,6 +111,15 @@ code {
   position: relative;
   z-index: 1;
 }
+
+/*
+- What it does:
+  Positions the main application shell and shared card surfaces.
+- Inputs:
+  Top-level layout, panel, hero, message, and empty-state elements.
+- Outputs:
+  Responsive spacing, glass card surfaces, and hero presentation.
+*/
 
 .app-shell {
   position: relative;
@@ -355,6 +373,15 @@ code {
   color: var(--accent-cyan);
 }
 
+/*
+- What it does:
+  Styles the command area, mode switch, and official scenario controls.
+- Inputs:
+  Mode buttons, section headings, control cards, and scenario summary chips.
+- Outputs:
+  A readable control surface for switching official/custom workflows.
+*/
+
 .command-panel,
 .official-panel,
 .custom-panel {
@@ -567,6 +594,15 @@ code {
   box-shadow: inset 0 1px 0 rgba(251, 191, 36, 0.2);
 }
 
+/*
+- What it does:
+  Styles A/B overview cards, pair summaries, and mini comparison visuals.
+- Inputs:
+  Official/custom pair rows, metric labels, and delta tone classes.
+- Outputs:
+  Side-by-side story cards, bars, and signal indicators.
+*/
+
 .pair-overview-card {
   display: grid;
   gap: 18px;
@@ -758,6 +794,15 @@ code {
   color: var(--text-strong);
 }
 
+/*
+- What it does:
+  Styles chart, table, and analysis containers for simulation results.
+- Inputs:
+  Recharts wrappers, comparison tables, advanced panels, and schema cards.
+- Outputs:
+  Scrollable result sections with consistent spacing and surface treatment.
+*/
+
 .analysis-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.9fr);
@@ -797,6 +842,15 @@ code {
   width: 100%;
   height: 320px;
 }
+
+/*
+- What it does:
+  Styles the custom scenario builder and comparison form layout.
+- Inputs:
+  Builder columns, preset fields, summaries, source rows, and editor cards.
+- Outputs:
+  A two-column builder interface that collapses on narrower screens.
+*/
 
 .custom-shell {
   display: grid;
@@ -984,6 +1038,15 @@ code {
   gap: 18px;
 }
 
+/*
+- What it does:
+  Defines shared form controls, buttons, messages, and table presentation.
+- Inputs:
+  Selects, inputs, textareas, buttons, table cells, pills, and message tones.
+- Outputs:
+  Consistent interactive controls and readable data tables.
+*/
+
 select,
 input,
 textarea {
@@ -1156,6 +1219,15 @@ td {
   color: #dbeafe;
 }
 
+/*
+- What it does:
+  Styles collapsible reference/schema sections and custom scrollbars.
+- Inputs:
+  Reference panels, schema cards, preformatted schema text, and scroll areas.
+- Outputs:
+  Readable technical reference blocks within the dashboard.
+*/
+
 .reference-panel {
   padding: 22px 24px;
 }
@@ -1195,6 +1267,15 @@ td {
 ::-webkit-scrollbar-track {
   background: rgba(15, 23, 42, 0.26);
 }
+
+/*
+- What it does:
+  Adjusts dashboard grids and controls for tablet and mobile viewports.
+- Inputs:
+  Viewport width breakpoints and existing layout classes.
+- Outputs:
+  Single-column responsive layouts and full-width touch targets where needed.
+*/
 
 @media (max-width: 1240px) {
   .hero,

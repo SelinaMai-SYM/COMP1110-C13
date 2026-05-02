@@ -33,11 +33,65 @@ import type {
   ScenarioResult,
 } from './types'
 
+/*
+- What it does:
+  Renders the restaurant simulation dashboard and scenario comparison workflow.
+- Inputs:
+  Backend data, user selections, and simulation results held in React state.
+- Outputs:
+  Interactive React UI for official and custom comparisons.
+*/
+
 type Mode = 'official' | 'custom'
+/*
+- What it does:
+  Defines the builder side data contract.
+- Inputs:
+  Values exchanged between the API, builder, and React UI.
+- Outputs:
+  A TypeScript type used for compile-time checking.
+*/
+
 type BuilderSide = 'A' | 'B'
+/*
+- What it does:
+  Defines the builder pair state data contract.
+- Inputs:
+  Values exchanged between the API, builder, and React UI.
+- Outputs:
+  A TypeScript type used for compile-time checking.
+*/
+
 type BuilderPairState = Record<BuilderSide, BuilderFormState>
+/*
+- What it does:
+  Defines the numeric metric key data contract.
+- Inputs:
+  Values exchanged between the API, builder, and React UI.
+- Outputs:
+  A TypeScript type used for compile-time checking.
+*/
+
 type NumericMetricKey = Exclude<keyof MetricsRecord, 'scenario_name' | 'notes'>
+/*
+- What it does:
+  Defines the signal tone data contract.
+- Inputs:
+  Values exchanged between the API, builder, and React UI.
+- Outputs:
+  A TypeScript type used for compile-time checking.
+*/
+
 type SignalTone = 'positive' | 'negative' | 'neutral'
+/*
+- What it does:
+  Defines the pair overview copy data contract.
+- Inputs:
+  Values exchanged between the API, builder, and React UI.
+- Outputs:
+  A TypeScript type used for compile-time checking.
+*/
+
 type PairOverviewCopy = {
   eyebrow: string
   areaHeading: string
@@ -103,6 +157,15 @@ const chartMetrics = [
   'table_utilization_overall',
  ] as const satisfies ReadonlyArray<NumericMetricKey>
 
+/*
+- What it does:
+  Defines the chart metric data contract.
+- Inputs:
+  Values exchanged between the API, builder, and React UI.
+- Outputs:
+  A TypeScript type used for compile-time checking.
+*/
+
 type ChartMetric = (typeof chartMetrics)[number]
 
 const comparisonChartLabels: Record<ChartMetric, string> = {
@@ -147,6 +210,15 @@ const defaultOverviewCopy: PairOverviewCopy = {
   sameDescription: 'This part stays the same so the effect of the main change is easier to read.',
 }
 
+/*
+- What it does:
+  Performs the format metric value UI or data transformation step.
+- Inputs:
+  The arguments declared by the function signature.
+- Outputs:
+  A computed value, rendered component, or state update result.
+*/
+
 function formatMetricValue(metric: NumericMetricKey, value: number) {
   if (ratioMetrics.has(metric)) {
     return `${(value * 100).toFixed(1)}%`
@@ -156,6 +228,15 @@ function formatMetricValue(metric: NumericMetricKey, value: number) {
   }
   return value.toFixed(2)
 }
+
+/*
+- What it does:
+  Performs the format delta UI or data transformation step.
+- Inputs:
+  The arguments declared by the function signature.
+- Outputs:
+  A computed value, rendered component, or state update result.
+*/
 
 function formatDelta(metric: NumericMetricKey, value: number) {
   const formatted = ratioMetrics.has(metric)
@@ -170,9 +251,27 @@ function formatDelta(metric: NumericMetricKey, value: number) {
   return formatted
 }
 
+/*
+- What it does:
+  Performs the chart metric value UI or data transformation step.
+- Inputs:
+  The arguments declared by the function signature.
+- Outputs:
+  A computed value, rendered component, or state update result.
+*/
+
 function chartMetricValue(metric: NumericMetricKey, value: number) {
   return ratioMetrics.has(metric) ? Number((value * 100).toFixed(2)) : Number(value.toFixed(2))
 }
+
+/*
+- What it does:
+  Performs the build comparison chart data UI or data transformation step.
+- Inputs:
+  The arguments declared by the function signature.
+- Outputs:
+  A computed value, rendered component, or state update result.
+*/
 
 function buildComparisonChartData(result: PairComparison) {
   return chartMetrics.map((metric) => ({
@@ -181,6 +280,15 @@ function buildComparisonChartData(result: PairComparison) {
     B: chartMetricValue(metric, result.B.metrics[metric]),
   }))
 }
+
+/*
+- What it does:
+  Performs the build pair preview rows UI or data transformation step.
+- Inputs:
+  The arguments declared by the function signature.
+- Outputs:
+  A computed value, rendered component, or state update result.
+*/
 
 function buildPairPreviewRows(result: PairComparison) {
   return pairPreviewMetrics.map((metric) => {
@@ -204,9 +312,27 @@ function buildPairPreviewRows(result: PairComparison) {
   })
 }
 
+/*
+- What it does:
+  Performs the metric direction hint UI or data transformation step.
+- Inputs:
+  The arguments declared by the function signature.
+- Outputs:
+  A computed value, rendered component, or state update result.
+*/
+
 function metricDirectionHint(metric: NumericMetricKey) {
   return lowerIsBetterMetrics.has(metric) ? 'Usually better when lower' : 'Usually better when higher'
 }
+
+/*
+- What it does:
+  Performs the metric direction tone UI or data transformation step.
+- Inputs:
+  The arguments declared by the function signature.
+- Outputs:
+  A computed value, rendered component, or state update result.
+*/
 
 function metricDirectionTone(metric: NumericMetricKey, delta: number): SignalTone {
   if (delta === 0) {
@@ -216,9 +342,27 @@ function metricDirectionTone(metric: NumericMetricKey, delta: number): SignalTon
   return improved ? 'positive' : 'negative'
 }
 
+/*
+- What it does:
+  Performs the format case study title UI or data transformation step.
+- Inputs:
+  The arguments declared by the function signature.
+- Outputs:
+  A computed value, rendered component, or state update result.
+*/
+
 function formatCaseStudyTitle(title: string) {
   return title.replace(/^Pair\s+\d+\s*:\s*/i, '').trim()
 }
+
+/*
+- What it does:
+  Performs the case study pair number UI or data transformation step.
+- Inputs:
+  The arguments declared by the function signature.
+- Outputs:
+  A computed value, rendered component, or state update result.
+*/
 
 function caseStudyPairNumber(entry: Pick<CaseStudyMetadata, 'case_study' | 'title'>) {
   const fromPath = entry.case_study.match(/pair[_-]?0*(\d+)/i)
@@ -228,6 +372,15 @@ function caseStudyPairNumber(entry: Pick<CaseStudyMetadata, 'case_study' | 'titl
   const fromTitle = entry.title.match(/pair\s+0*(\d+)/i)
   return fromTitle ? Number(fromTitle[1]) : null
 }
+
+/*
+- What it does:
+  Performs the sort case studies UI or data transformation step.
+- Inputs:
+  The arguments declared by the function signature.
+- Outputs:
+  A computed value, rendered component, or state update result.
+*/
 
 function sortCaseStudies(entries: CaseStudyMetadata[]) {
   return [...entries].sort((left, right) => {
@@ -246,6 +399,15 @@ function sortCaseStudies(entries: CaseStudyMetadata[]) {
   })
 }
 
+/*
+- What it does:
+  Performs the format case study option label UI or data transformation step.
+- Inputs:
+  The arguments declared by the function signature.
+- Outputs:
+  A computed value, rendered component, or state update result.
+*/
+
 function formatCaseStudyOptionLabel(entry: Pick<CaseStudyMetadata, 'case_study' | 'title'>) {
   const pairNumber = caseStudyPairNumber(entry)
   const title = formatCaseStudyTitle(entry.title)
@@ -254,6 +416,15 @@ function formatCaseStudyOptionLabel(entry: Pick<CaseStudyMetadata, 'case_study' 
   }
   return `pair${String(pairNumber).padStart(2, '0')} - ${title}`
 }
+
+/*
+- What it does:
+  Performs the build metric delta map UI or data transformation step.
+- Inputs:
+  The arguments declared by the function signature.
+- Outputs:
+  A computed value, rendered component, or state update result.
+*/
 
 function buildMetricDeltaMap(
   resultA: ScenarioResult,
@@ -267,6 +438,15 @@ function buildMetricDeltaMap(
   )
 }
 
+/*
+- What it does:
+  Performs the build custom pair comparison UI or data transformation step.
+- Inputs:
+  The arguments declared by the function signature.
+- Outputs:
+  A computed value, rendered component, or state update result.
+*/
+
 function buildCustomPairComparison(
   comparisonId: string,
   resultA: ScenarioResult,
@@ -279,6 +459,15 @@ function buildCustomPairComparison(
     metric_deltas_b_minus_a: buildMetricDeltaMap(resultA, resultB),
   }
 }
+
+/*
+- What it does:
+  Coordinates dashboard mode, API loading, builder state, and comparison rendering.
+- Inputs:
+  React state, user actions, and backend responses.
+- Outputs:
+  The complete dashboard UI tree.
+*/
 
 function AppShell() {
   const [mode, setMode] = useState<Mode>('official')
@@ -660,6 +849,15 @@ function AppShell() {
   )
 }
 
+/*
+- What it does:
+  Renders one official or custom comparison option card.
+- Inputs:
+  Card copy, active state, and click handler props.
+- Outputs:
+  A selectable button-style card.
+*/
+
 function ComparisonOptionCard({
   side,
   form,
@@ -782,6 +980,15 @@ function ComparisonOptionCard({
     </article>
   )
 }
+
+/*
+- What it does:
+  Renders pair comparison tables, charts, and summary cards.
+- Inputs:
+  A PairComparison result plus UI copy options.
+- Outputs:
+  A results section for A/B metrics and overview rows.
+*/
 
 function ComparisonResultsBlock({
   title,
@@ -920,6 +1127,15 @@ function ComparisonResultsBlock({
   )
 }
 
+/*
+- What it does:
+  Shows which scenario settings changed between A and B.
+- Inputs:
+  Overview rows and copy labels.
+- Outputs:
+  A comparison table grouped by changed versus unchanged settings.
+*/
+
 function PairOverviewTable({
   title,
   summary,
@@ -1016,6 +1232,15 @@ function PairOverviewTable({
   )
 }
 
+/*
+- What it does:
+  Summarizes the comparison using a few headline metric deltas.
+- Inputs:
+  An optional PairComparison result.
+- Outputs:
+  A compact metric preview card or loading fallback.
+*/
+
 function PairAtAGlanceCard({ result }: { result: PairComparison | null }) {
   if (!result) {
     return (
@@ -1075,6 +1300,15 @@ function PairAtAGlanceCard({ result }: { result: PairComparison | null }) {
   )
 }
 
+/*
+- What it does:
+  Shows key metric values for options A and B with deltas.
+- Inputs:
+  A PairComparison result.
+- Outputs:
+  A table of formatted metric comparisons.
+*/
+
 function MetricComparisonTable({ result }: { result: PairComparison }) {
   return (
     <div className="table-card">
@@ -1119,6 +1353,15 @@ function MetricComparisonTable({ result }: { result: PairComparison }) {
   )
 }
 
+/*
+- What it does:
+  Displays a single metric label and value in a card.
+- Inputs:
+  Metric label and rendered value props.
+- Outputs:
+  A compact metric card.
+*/
+
 function MetricCard({
   label,
   value,
@@ -1138,6 +1381,15 @@ function MetricCard({
     </article>
   )
 }
+
+/*
+- What it does:
+  Renders a labelled select field backed by preset records.
+- Inputs:
+  Label, value, preset options, and change handler.
+- Outputs:
+  A form field for builder presets.
+*/
 
 function PresetField<T extends { id: string; title: string; description: string }>({
   label,
@@ -1173,6 +1425,15 @@ function PresetField<T extends { id: string; title: string; description: string 
   )
 }
 
+/*
+- What it does:
+  Renders a generic labelled select input.
+- Inputs:
+  Label, value, option list, and change handler.
+- Outputs:
+  A select field with descriptions.
+*/
+
 function SelectField({
   label,
   value,
@@ -1200,6 +1461,15 @@ function SelectField({
   )
 }
 
+/*
+- What it does:
+  Renders a labelled text input.
+- Inputs:
+  Label, value, and change handler.
+- Outputs:
+  A text field for scenario names or similar values.
+*/
+
 function InputField({
   label,
   value,
@@ -1221,6 +1491,15 @@ function InputField({
     </label>
   )
 }
+
+/*
+- What it does:
+  Renders a labelled numeric input with bounds.
+- Inputs:
+  Label, value, min/max, and change handler.
+- Outputs:
+  A number input that reports parsed numeric values.
+*/
 
 function NumberField({
   label,
@@ -1252,9 +1531,27 @@ function NumberField({
   )
 }
 
+/*
+- What it does:
+  Renders status or error copy in a consistent card.
+- Inputs:
+  Tone and message text.
+- Outputs:
+  A styled message block.
+*/
+
 function MessageCard({ tone, message }: { tone: 'danger' | 'neutral'; message: string }) {
   return <div className={`message-card ${tone}`}>{message}</div>
 }
+
+/*
+- What it does:
+  Renders fallback copy when data or results are absent.
+- Inputs:
+  Title and message text.
+- Outputs:
+  A simple empty-state block.
+*/
 
 function EmptyState({ title, message }: { title: string; message: string }) {
   return (

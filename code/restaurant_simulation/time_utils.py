@@ -1,5 +1,12 @@
 from __future__ import annotations
 
+# What it does:
+#   Provides small time and percentile helpers used by loaders and metrics.
+# Inputs:
+#   Clock strings, minute intervals, and numeric samples.
+# Outputs:
+#   Minute counts, formatted clocks, bounded durations, or percentile values.
+
 
 def parse_clock(value: str) -> int:
     parts = value.strip().split(":")
@@ -12,16 +19,37 @@ def parse_clock(value: str) -> int:
     return hour * 60 + minute
 
 
+# What it does:
+#   Performs the format clock step.
+# Inputs:
+#   The arguments declared by the function signature.
+# Outputs:
+#   The return value or state mutation described by the function body.
+
 def format_clock(minute: int) -> str:
     hour, minute = divmod(minute, 60)
     return f"{hour:02d}:{minute:02d}"
 
+
+# What it does:
+#   Performs the clamp interval step.
+# Inputs:
+#   The arguments declared by the function signature.
+# Outputs:
+#   The return value or state mutation described by the function body.
 
 def clamp_interval(start: int, end: int, lower: int, upper: int) -> int:
     bounded_start = max(start, lower)
     bounded_end = min(end, upper)
     return max(0, bounded_end - bounded_start)
 
+
+# What it does:
+#   Performs the percentile step.
+# Inputs:
+#   The arguments declared by the function signature.
+# Outputs:
+#   The return value or state mutation described by the function body.
 
 def percentile(values: list[int | float], fraction: float) -> float:
     if not values:

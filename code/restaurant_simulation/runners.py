@@ -1,5 +1,12 @@
 from __future__ import annotations
 
+# What it does:
+#   Coordinates simulator runs for one scenario, one A/B pair, or all official case studies.
+# Inputs:
+#   Scenario definitions, case-study ids, data roots, and optional output locations.
+# Outputs:
+#   Simulation result dictionaries plus CSV/JSON output files when running all cases.
+
 import csv
 import json
 from pathlib import Path
@@ -13,10 +20,24 @@ from .simulator import RestaurantSimulator
 OUTPUT_ROOT = Path(__file__).resolve().parents[1] / "outputs"
 
 
+# What it does:
+#   Runs one already-loaded scenario through the simulator.
+# Inputs:
+#   A ScenarioDefinition.
+# Outputs:
+#   A ScenarioResult.
+
 def run_scenario(scenario: ScenarioDefinition):
     simulator = RestaurantSimulator(scenario)
     return simulator.run()
 
+
+# What it does:
+#   Runs both A and B versions of an official case study and compares metrics.
+# Inputs:
+#   A case-study id and optional data root.
+# Outputs:
+#   A dictionary containing both results and B-minus-A metric deltas.
 
 def run_case_pair(case_study: str, *, data_root: str | Path | None = None) -> dict[str, Any]:
     result_a = run_scenario(load_case_study(case_study, "A", data_root=data_root))
@@ -38,6 +59,13 @@ def run_case_pair(case_study: str, *, data_root: str | Path | None = None) -> di
         "metric_deltas_b_minus_a": metric_deltas,
     }
 
+
+# What it does:
+#   Runs every discovered official case study pair and writes summary artifacts.
+# Inputs:
+#   Optional output directory and data root.
+# Outputs:
+#   Paths to generated artifacts plus all comparison payloads.
 
 def run_all_case_studies(
     *,

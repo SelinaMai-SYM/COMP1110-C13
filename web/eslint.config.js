@@ -5,6 +5,14 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
+/*
+- What it does:
+  Configures linting for the React and TypeScript dashboard source.
+- Inputs:
+  ESLint core rules, TypeScript rules, React Hooks rules, and Vite refresh rules.
+- Outputs:
+  An ESLint flat config that ignores build output and checks ts/tsx files.
+*/
 export default defineConfig([
   globalIgnores(['dist']),
   {

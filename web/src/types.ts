@@ -1,3 +1,12 @@
+/*
+- What it does:
+  Defines TypeScript contracts shared by the dashboard UI and API client.
+- Inputs:
+  JSON shapes returned by the backend and values selected in the builder form.
+- Outputs:
+  Typed interfaces and unions used throughout the React app.
+*/
+
 export interface MetricsRecord {
   scenario_name: string
   average_wait_time: number
@@ -15,6 +24,15 @@ export interface MetricsRecord {
   notes: string
 }
 
+/*
+- What it does:
+  Defines the event log entry data contract.
+- Inputs:
+  Values exchanged between the API, builder, and React UI.
+- Outputs:
+  A TypeScript type used for compile-time checking.
+*/
+
 export interface EventLogEntry {
   minute: number
   clock: string
@@ -26,12 +44,30 @@ export interface EventLogEntry {
   details: Record<string, unknown>
 }
 
+/*
+- What it does:
+  Defines the queue snapshot data contract.
+- Inputs:
+  Values exchanged between the API, builder, and React UI.
+- Outputs:
+  A TypeScript type used for compile-time checking.
+*/
+
 export interface QueueSnapshot {
   minute: number
   clock: string
   total_waiting: number
   per_queue: Record<string, number>
 }
+
+/*
+- What it does:
+  Defines the table segment data contract.
+- Inputs:
+  Values exchanged between the API, builder, and React UI.
+- Outputs:
+  A TypeScript type used for compile-time checking.
+*/
 
 export interface TableSegment {
   table_id: string
@@ -42,6 +78,15 @@ export interface TableSegment {
   end_clock: string
   group_id: string | null
 }
+
+/*
+- What it does:
+  Defines the group outcome data contract.
+- Inputs:
+  Values exchanged between the API, builder, and React UI.
+- Outputs:
+  A TypeScript type used for compile-time checking.
+*/
 
 export interface GroupOutcome {
   group_id: string
@@ -62,6 +107,15 @@ export interface GroupOutcome {
   notes: string
 }
 
+/*
+- What it does:
+  Defines the scenario result data contract.
+- Inputs:
+  Values exchanged between the API, builder, and React UI.
+- Outputs:
+  A TypeScript type used for compile-time checking.
+*/
+
 export interface ScenarioResult {
   scenario_name: string
   metrics: MetricsRecord
@@ -72,12 +126,30 @@ export interface ScenarioResult {
   source_paths: Record<string, string>
 }
 
+/*
+- What it does:
+  Defines the pair comparison data contract.
+- Inputs:
+  Values exchanged between the API, builder, and React UI.
+- Outputs:
+  A TypeScript type used for compile-time checking.
+*/
+
 export interface PairComparison {
   case_study: string
   A: ScenarioResult
   B: ScenarioResult
   metric_deltas_b_minus_a: Record<string, number>
 }
+
+/*
+- What it does:
+  Defines the case study metadata data contract.
+- Inputs:
+  Values exchanged between the API, builder, and React UI.
+- Outputs:
+  A TypeScript type used for compile-time checking.
+*/
 
 export interface CaseStudyMetadata {
   case_study: string
@@ -88,6 +160,15 @@ export interface CaseStudyMetadata {
   focus_label: string
   starter_versions: Partial<Record<'A' | 'B', CaseStudyStarterVersion>>
 }
+
+/*
+- What it does:
+  Defines the case study starter version data contract.
+- Inputs:
+  Values exchanged between the API, builder, and React UI.
+- Outputs:
+  A TypeScript type used for compile-time checking.
+*/
 
 export interface CaseStudyStarterVersion {
   label: string
@@ -103,13 +184,40 @@ export interface CaseStudyStarterVersion {
   notes?: string
 }
 
+/*
+- What it does:
+  Defines the schemas response data contract.
+- Inputs:
+  Values exchanged between the API, builder, and React UI.
+- Outputs:
+  A TypeScript type used for compile-time checking.
+*/
+
 export interface SchemasResponse {
   schemas: Record<string, string>
 }
 
+/*
+- What it does:
+  Defines the case studies response data contract.
+- Inputs:
+  Values exchanged between the API, builder, and React UI.
+- Outputs:
+  A TypeScript type used for compile-time checking.
+*/
+
 export interface CaseStudiesResponse {
   case_studies: CaseStudyMetadata[]
 }
+
+/*
+- What it does:
+  Defines the case study inputs response data contract.
+- Inputs:
+  Values exchanged between the API, builder, and React UI.
+- Outputs:
+  A TypeScript type used for compile-time checking.
+*/
 
 export interface CaseStudyInputsResponse {
   config_json: string
@@ -117,7 +225,25 @@ export interface CaseStudyInputsResponse {
   policy_json: string
 }
 
+/*
+- What it does:
+  Defines the queue mode data contract.
+- Inputs:
+  Values exchanged between the API, builder, and React UI.
+- Outputs:
+  A TypeScript type used for compile-time checking.
+*/
+
 export type QueueMode = 'single' | 'size_based'
+
+/*
+- What it does:
+  Defines the queue definition input data contract.
+- Inputs:
+  Values exchanged between the API, builder, and React UI.
+- Outputs:
+  A TypeScript type used for compile-time checking.
+*/
 
 export interface QueueDefinitionInput {
   queue_id: string
@@ -125,10 +251,28 @@ export interface QueueDefinitionInput {
   max_size: number
 }
 
+/*
+- What it does:
+  Defines the table spec input data contract.
+- Inputs:
+  Values exchanged between the API, builder, and React UI.
+- Outputs:
+  A TypeScript type used for compile-time checking.
+*/
+
 export interface TableSpecInput {
   table_id: string
   capacity: number
 }
+
+/*
+- What it does:
+  Defines the restaurant preset data data contract.
+- Inputs:
+  Values exchanged between the API, builder, and React UI.
+- Outputs:
+  A TypeScript type used for compile-time checking.
+*/
 
 export interface RestaurantPresetData {
   restaurant_name: string
@@ -150,6 +294,15 @@ export interface RestaurantPresetData {
   optional_operational_defaults?: Record<string, unknown>
 }
 
+/*
+- What it does:
+  Defines the seating policy preset data data contract.
+- Inputs:
+  Values exchanged between the API, builder, and React UI.
+- Outputs:
+  A TypeScript type used for compile-time checking.
+*/
+
 export interface SeatingPolicyPresetData {
   policy_category: string
   policy_name: string
@@ -160,6 +313,15 @@ export interface SeatingPolicyPresetData {
   late_reservation_behavior: string
   no_show_handling: Record<string, unknown>
 }
+
+/*
+- What it does:
+  Defines the service policy preset data data contract.
+- Inputs:
+  Values exchanged between the API, builder, and React UI.
+- Outputs:
+  A TypeScript type used for compile-time checking.
+*/
 
 export interface ServicePolicyPresetData {
   policy_category: string
@@ -173,6 +335,15 @@ export interface ServicePolicyPresetData {
   abandonment_enabled: boolean
 }
 
+/*
+- What it does:
+  Defines the reservation policy preset data data contract.
+- Inputs:
+  Values exchanged between the API, builder, and React UI.
+- Outputs:
+  A TypeScript type used for compile-time checking.
+*/
+
 export interface ReservationPolicyPresetData {
   policy_category: string
   policy_name: string
@@ -184,6 +355,15 @@ export interface ReservationPolicyPresetData {
   no_show_handling: Record<string, unknown>
 }
 
+/*
+- What it does:
+  Defines the json preset data contract.
+- Inputs:
+  Values exchanged between the API, builder, and React UI.
+- Outputs:
+  A TypeScript type used for compile-time checking.
+*/
+
 export interface JsonPreset<T> {
   id: string
   title: string
@@ -192,6 +372,15 @@ export interface JsonPreset<T> {
   raw: string
   data: T
 }
+
+/*
+- What it does:
+  Defines the csv preset data contract.
+- Inputs:
+  Values exchanged between the API, builder, and React UI.
+- Outputs:
+  A TypeScript type used for compile-time checking.
+*/
 
 export interface CsvPreset {
   id: string
@@ -205,6 +394,15 @@ export interface CsvPreset {
   walkin_groups: number
 }
 
+/*
+- What it does:
+  Defines the builder presets response data contract.
+- Inputs:
+  Values exchanged between the API, builder, and React UI.
+- Outputs:
+  A TypeScript type used for compile-time checking.
+*/
+
 export interface BuilderPresetsResponse {
   restaurant_layouts: JsonPreset<RestaurantPresetData>[]
   queue_structures: JsonPreset<RestaurantPresetData>[]
@@ -213,6 +411,15 @@ export interface BuilderPresetsResponse {
   reservation_policies: JsonPreset<ReservationPolicyPresetData>[]
   arrival_scenarios: CsvPreset[]
 }
+
+/*
+- What it does:
+  Defines the builder form state data contract.
+- Inputs:
+  Values exchanged between the API, builder, and React UI.
+- Outputs:
+  A TypeScript type used for compile-time checking.
+*/
 
 export interface BuilderFormState {
   simulationStart: string
@@ -226,6 +433,15 @@ export interface BuilderFormState {
   holdMinutes: number
   abandonmentEnabled: boolean
 }
+
+/*
+- What it does:
+  Defines the custom scenario payload data contract.
+- Inputs:
+  Values exchanged between the API, builder, and React UI.
+- Outputs:
+  A TypeScript type used for compile-time checking.
+*/
 
 export interface CustomScenarioPayload {
   scenario_name: string

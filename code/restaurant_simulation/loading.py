@@ -1,5 +1,12 @@
 from __future__ import annotations
 
+# What it does:
+#   Loads, validates, and composes scenario data from shared preset files.
+# Inputs:
+#   JSON presets, CSV arrival data, case-study manifests, and optional data roots.
+# Outputs:
+#   Typed scenario models, preset catalogs, schemas, or validation errors.
+
 import copy
 import csv
 import json
@@ -31,12 +38,26 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 DATA_ROOT = REPO_ROOT / "data"
 
 
+# What it does:
+#   Resolves data root from arguments or defaults.
+# Inputs:
+#   Optional paths, environment variables, or identifiers.
+# Outputs:
+#   A concrete path or resolved payload value.
+
 def resolve_data_root(data_root: str | Path | None = None) -> Path:
     if data_root is not None:
         return Path(data_root)
     configured = os.getenv("SIM_DATA_ROOT")
     return Path(configured) if configured else DATA_ROOT
 
+
+# What it does:
+#   Performs the parse bool step.
+# Inputs:
+#   The arguments declared by the function signature.
+# Outputs:
+#   The return value or state mutation described by the function body.
 
 def _parse_bool(value: str | bool) -> bool:
     if isinstance(value, bool):
@@ -49,15 +70,36 @@ def _parse_bool(value: str | bool) -> bool:
     raise ValueError(f"Invalid boolean value: {value!r}")
 
 
+# What it does:
+#   Performs the require keys step.
+# Inputs:
+#   The arguments declared by the function signature.
+# Outputs:
+#   The return value or state mutation described by the function body.
+
 def _require_keys(mapping: dict[str, Any], keys: list[str], label: str) -> None:
     missing = [key for key in keys if key not in mapping]
     if missing:
         raise ValueError(f"{label} missing required keys: {', '.join(missing)}")
 
 
+# What it does:
+#   Loads json file data into project models.
+# Inputs:
+#   Raw files, payloads, or optional data-root arguments.
+# Outputs:
+#   Validated Python objects or dictionaries ready for simulation/API use.
+
 def _load_json_file(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
+
+# What it does:
+#   Loads config data into project models.
+# Inputs:
+#   Raw files, payloads, or optional data-root arguments.
+# Outputs:
+#   Validated Python objects or dictionaries ready for simulation/API use.
 
 def _load_config(raw: dict[str, Any]) -> RestaurantConfig:
     _require_keys(
@@ -158,6 +200,13 @@ def _load_config(raw: dict[str, Any]) -> RestaurantConfig:
     )
 
 
+# What it does:
+#   Loads policy data into project models.
+# Inputs:
+#   Raw files, payloads, or optional data-root arguments.
+# Outputs:
+#   Validated Python objects or dictionaries ready for simulation/API use.
+
 def _load_policy(raw: dict[str, Any], config: RestaurantConfig) -> PolicyBundle:
     _require_keys(raw, ["policy_name", "seating_policy", "service_policy"], "policy bundle")
 
@@ -240,6 +289,13 @@ def _load_policy(raw: dict[str, Any], config: RestaurantConfig) -> PolicyBundle:
     )
 
 
+# What it does:
+#   Validates group against config against simulation constraints.
+# Inputs:
+#   Parsed objects and configuration bounds.
+# Outputs:
+#   No value; raises ValueError when the input is invalid.
+
 def _validate_group_against_config(group: ArrivalGroup, config: RestaurantConfig) -> None:
     matching_queues = [queue for queue in config.queue_definitions if queue.matches(group.group_size)]
     if len(matching_queues) != 1:
@@ -253,6 +309,13 @@ def _validate_group_against_config(group: ArrivalGroup, config: RestaurantConfig
     if group.arrival_minute < config.simulation_start or group.arrival_minute > config.simulation_end:
         raise ValueError(f"Group {group.group_id} falls outside the simulation window.")
 
+
+# What it does:
+#   Loads arrivals from text data into project models.
+# Inputs:
+#   Raw files, payloads, or optional data-root arguments.
+# Outputs:
+#   Validated Python objects or dictionaries ready for simulation/API use.
 
 def _load_arrivals_from_text(text: str, config: RestaurantConfig) -> list[ArrivalGroup]:
     reader = csv.DictReader(StringIO(text))
@@ -319,6 +382,13 @@ def _load_arrivals_from_text(text: str, config: RestaurantConfig) -> list[Arriva
     return arrivals
 
 
+# What it does:
+#   Loads scenario paths data into project models.
+# Inputs:
+#   Raw files, payloads, or optional data-root arguments.
+# Outputs:
+#   Validated Python objects or dictionaries ready for simulation/API use.
+
 def load_scenario_paths(
     config_path: str | Path,
     arrivals_path: str | Path,
@@ -345,6 +415,13 @@ def load_scenario_paths(
     )
 
 
+# What it does:
+#   Loads case study data into project models.
+# Inputs:
+#   Raw files, payloads, or optional data-root arguments.
+# Outputs:
+#   Validated Python objects or dictionaries ready for simulation/API use.
+
 def load_case_study(
     case_study: str,
     version: str,
@@ -363,6 +440,13 @@ def load_case_study(
         source_paths=resolved["source_paths"],
     )
 
+
+# What it does:
+#   Loads custom scenario data into project models.
+# Inputs:
+#   Raw files, payloads, or optional data-root arguments.
+# Outputs:
+#   Validated Python objects or dictionaries ready for simulation/API use.
 
 def load_custom_scenario(
     *,
@@ -387,12 +471,26 @@ def load_custom_scenario(
     )
 
 
+# What it does:
+#   Performs the normalize case study version step.
+# Inputs:
+#   The arguments declared by the function signature.
+# Outputs:
+#   The return value or state mutation described by the function body.
+
 def _normalize_case_study_version(version: str) -> str:
     normalized_version = version.upper()
     if normalized_version not in {"A", "B"}:
         raise ValueError(f"Unsupported case study version: {version!r}")
     return normalized_version
 
+
+# What it does:
+#   Reads case study readme from disk.
+# Inputs:
+#   A filesystem path.
+# Outputs:
+#   Parsed text or metadata values.
 
 def _read_case_study_readme(case_dir: Path) -> tuple[str, str]:
     readme_path = case_dir / "README.md"
@@ -407,9 +505,23 @@ def _read_case_study_readme(case_dir: Path) -> tuple[str, str]:
     return title, summary
 
 
+# What it does:
+#   Performs the case study manifest path step.
+# Inputs:
+#   The arguments declared by the function signature.
+# Outputs:
+#   The return value or state mutation described by the function body.
+
 def _case_study_manifest_path(root: Path, case_study: str) -> Path:
     return root / "case_studies" / case_study / "case_study.json"
 
+
+# What it does:
+#   Loads case study manifest data into project models.
+# Inputs:
+#   Raw files, payloads, or optional data-root arguments.
+# Outputs:
+#   Validated Python objects or dictionaries ready for simulation/API use.
 
 def _load_case_study_manifest(
     case_study: str,
@@ -424,6 +536,13 @@ def _load_case_study_manifest(
     _require_keys(raw, ["title", "summary", "focus_label", "versions"], "case study manifest")
     return raw, manifest_path
 
+
+# What it does:
+#   Performs the starter version from manifest step.
+# Inputs:
+#   The arguments declared by the function signature.
+# Outputs:
+#   The return value or state mutation described by the function body.
 
 def _starter_version_from_manifest(raw: dict[str, Any]) -> CaseStudyStarterVersion:
     _require_keys(
@@ -457,6 +576,13 @@ def _starter_version_from_manifest(raw: dict[str, Any]) -> CaseStudyStarterVersi
     )
 
 
+# What it does:
+#   Performs the manifest starter version step.
+# Inputs:
+#   The arguments declared by the function signature.
+# Outputs:
+#   The return value or state mutation described by the function body.
+
 def _manifest_starter_version(manifest: dict[str, Any], version: str) -> CaseStudyStarterVersion:
     normalized_version = _normalize_case_study_version(version)
     versions_raw = manifest.get("versions", {})
@@ -468,6 +594,13 @@ def _manifest_starter_version(manifest: dict[str, Any], version: str) -> CaseStu
     return _starter_version_from_manifest(starter_raw)
 
 
+# What it does:
+#   Performs the strip preset metadata step.
+# Inputs:
+#   The arguments declared by the function signature.
+# Outputs:
+#   The return value or state mutation described by the function body.
+
 def _strip_preset_metadata(payload: dict[str, Any]) -> dict[str, Any]:
     cleaned = copy.deepcopy(payload)
     for key in ["preset_id", "preset_family"]:
@@ -475,9 +608,23 @@ def _strip_preset_metadata(payload: dict[str, Any]) -> dict[str, Any]:
     return cleaned
 
 
+# What it does:
+#   Performs the logical preset id step.
+# Inputs:
+#   The arguments declared by the function signature.
+# Outputs:
+#   The return value or state mutation described by the function body.
+
 def _logical_preset_id(path: Path, payload: dict[str, Any]) -> str:
     return str(payload.get("preset_id") or path.stem)
 
+
+# What it does:
+#   Performs the logical preset sort key step.
+# Inputs:
+#   The arguments declared by the function signature.
+# Outputs:
+#   The return value or state mutation described by the function body.
 
 def _logical_preset_sort_key(path: Path, payload: dict[str, Any]) -> tuple[int, str, str]:
     family_rank = {"restaurant_layout": 0, "queue_structure": 1}
@@ -489,6 +636,13 @@ def _logical_preset_sort_key(path: Path, payload: dict[str, Any]) -> tuple[int, 
         _logical_preset_id(path, payload),
     )
 
+
+# What it does:
+#   Performs the restaurant config entries step.
+# Inputs:
+#   The arguments declared by the function signature.
+# Outputs:
+#   The return value or state mutation described by the function body.
 
 def _restaurant_config_entries(
     root: Path,
@@ -508,6 +662,13 @@ def _restaurant_config_entries(
     )
 
 
+# What it does:
+#   Performs the find restaurant config preset step.
+# Inputs:
+#   The arguments declared by the function signature.
+# Outputs:
+#   The return value or state mutation described by the function body.
+
 def _find_restaurant_config_preset(
     root: Path,
     preset_id: str,
@@ -520,11 +681,25 @@ def _find_restaurant_config_preset(
     raise FileNotFoundError(f"Missing {family} preset: {preset_id}")
 
 
+# What it does:
+#   Loads json path data into project models.
+# Inputs:
+#   Raw files, payloads, or optional data-root arguments.
+# Outputs:
+#   Validated Python objects or dictionaries ready for simulation/API use.
+
 def _load_json_path(path: Path, *, label: str) -> tuple[Path, dict[str, Any]]:
     if not path.exists():
         raise FileNotFoundError(f"Missing {label}: {path}")
     return path, _load_json_file(path)
 
+
+# What it does:
+#   Composes case study notes from selected presets.
+# Inputs:
+#   Preset payloads and manifest settings.
+# Outputs:
+#   A merged dictionary or typed policy/config object.
 
 def _compose_case_study_notes(layout_note: str, starter_note: str) -> str:
     if starter_note and layout_note and starter_note != layout_note:
@@ -532,11 +707,25 @@ def _compose_case_study_notes(layout_note: str, starter_note: str) -> str:
     return starter_note or layout_note
 
 
+# What it does:
+#   Performs the service policy name step.
+# Inputs:
+#   The arguments declared by the function signature.
+# Outputs:
+#   The return value or state mutation described by the function body.
+
 def _service_policy_name(base_name: str, abandonment_enabled: bool) -> str:
     if not abandonment_enabled or "abandonment" in base_name.lower():
         return base_name
     return f"{base_name} with Abandonment"
 
+
+# What it does:
+#   Composes case study config from selected presets.
+# Inputs:
+#   Preset payloads and manifest settings.
+# Outputs:
+#   A merged dictionary or typed policy/config object.
 
 def _compose_case_study_config(
     layout_payload: dict[str, Any],
@@ -568,6 +757,13 @@ def _compose_case_study_config(
     return config_payload
 
 
+# What it does:
+#   Composes case study policy from selected presets.
+# Inputs:
+#   Preset payloads and manifest settings.
+# Outputs:
+#   A merged dictionary or typed policy/config object.
+
 def _compose_case_study_policy(
     seating_payload: dict[str, Any],
     service_payload: dict[str, Any],
@@ -595,6 +791,13 @@ def _compose_case_study_policy(
         "service_policy": service_policy,
     }
 
+
+# What it does:
+#   Resolves case study payloads from arguments or defaults.
+# Inputs:
+#   Optional paths, environment variables, or identifiers.
+# Outputs:
+#   A concrete path or resolved payload value.
 
 def _resolve_case_study_payloads(
     case_study: str,
@@ -669,6 +872,13 @@ def _resolve_case_study_payloads(
     }
 
 
+# What it does:
+#   Performs the discover case studies step.
+# Inputs:
+#   The arguments declared by the function signature.
+# Outputs:
+#   The return value or state mutation described by the function body.
+
 def discover_case_studies(*, data_root: str | Path | None = None) -> list[CaseStudyMetadata]:
     root = resolve_data_root(data_root)
     case_root = root / "case_studies"
@@ -701,6 +911,13 @@ def discover_case_studies(*, data_root: str | Path | None = None) -> list[CaseSt
     return case_studies
 
 
+# What it does:
+#   Loads schema documents data into project models.
+# Inputs:
+#   Raw files, payloads, or optional data-root arguments.
+# Outputs:
+#   Validated Python objects or dictionaries ready for simulation/API use.
+
 def load_schema_documents(*, data_root: str | Path | None = None) -> dict[str, str]:
     root = resolve_data_root(data_root)
     schema_root = root / "schemas"
@@ -710,10 +927,24 @@ def load_schema_documents(*, data_root: str | Path | None = None) -> dict[str, s
     }
 
 
+# What it does:
+#   Performs the humanize stem step.
+# Inputs:
+#   The arguments declared by the function signature.
+# Outputs:
+#   The return value or state mutation described by the function body.
+
 def _humanize_stem(stem: str) -> str:
     normalized = stem.removesuffix("_base")
     return " ".join(part.capitalize() for part in normalized.split("_"))
 
+
+# What it does:
+#   Summarizes arrival groups for display.
+# Inputs:
+#   Raw preset content or parsed rows.
+# Outputs:
+#   A compact dictionary of summary values.
 
 def _summarize_arrival_groups(raw: str) -> dict[str, int]:
     row_count = 0
@@ -736,6 +967,13 @@ def _summarize_arrival_groups(raw: str) -> dict[str, int]:
         "walkin_groups": walkin_groups,
     }
 
+
+# What it does:
+#   Builds a catalog record for json preset record.
+# Inputs:
+#   A preset path and parsed payload.
+# Outputs:
+#   A dictionary for API/notebook/dashboard catalog displays.
 
 def _json_preset_record(
     path: Path,
@@ -765,6 +1003,13 @@ def _json_preset_record(
     }
 
 
+# What it does:
+#   Builds a catalog record for csv preset record.
+# Inputs:
+#   A preset path and parsed payload.
+# Outputs:
+#   A dictionary for API/notebook/dashboard catalog displays.
+
 def _csv_preset_record(path: Path) -> dict[str, object]:
     raw = path.read_text(encoding="utf-8")
     summary = _summarize_arrival_groups(raw)
@@ -789,6 +1034,13 @@ def _csv_preset_record(path: Path) -> dict[str, object]:
     }
 
 
+# What it does:
+#   Loads builder presets data into project models.
+# Inputs:
+#   Raw files, payloads, or optional data-root arguments.
+# Outputs:
+#   Validated Python objects or dictionaries ready for simulation/API use.
+
 def load_builder_presets(*, data_root: str | Path | None = None) -> dict[str, list[dict[str, object]]]:
     root = resolve_data_root(data_root)
     policy_root = root / "policies"
@@ -796,15 +1048,36 @@ def load_builder_presets(*, data_root: str | Path | None = None) -> dict[str, li
     restaurant_layouts = _restaurant_config_entries(root, family="restaurant_layout")
     queue_structures = _restaurant_config_entries(root, family="queue_structure")
 
+    # What it does:
+    #   Performs the config description step.
+    # Inputs:
+    #   The arguments declared by the function signature.
+    # Outputs:
+    #   The return value or state mutation described by the function body.
+
     def config_description(payload: dict[str, Any]) -> str:
         defaults = payload.get("optional_operational_defaults", {})
         notes = defaults.get("notes", "") if isinstance(defaults, dict) else ""
         return str(notes)
 
+    # What it does:
+    #   Performs the reservation title step.
+    # Inputs:
+    #   The arguments declared by the function signature.
+    # Outputs:
+    #   The return value or state mutation described by the function body.
+
     def reservation_title(payload: dict[str, Any]) -> str:
         if bool(payload.get("hold_tables_for_reservations")):
             return "Reservation Hold Enabled"
         return "No Reservation Hold"
+
+    # What it does:
+    #   Performs the reservation description step.
+    # Inputs:
+    #   The arguments declared by the function signature.
+    # Outputs:
+    #   The return value or state mutation described by the function body.
 
     def reservation_description(payload: dict[str, Any]) -> str:
         if bool(payload.get("hold_tables_for_reservations")):
@@ -855,6 +1128,13 @@ def load_builder_presets(*, data_root: str | Path | None = None) -> dict[str, li
     }
 
 
+# What it does:
+#   Performs the case study input paths step.
+# Inputs:
+#   The arguments declared by the function signature.
+# Outputs:
+#   The return value or state mutation described by the function body.
+
 def case_study_input_paths(
     case_study: str,
     version: str,
@@ -868,6 +1148,13 @@ def case_study_input_paths(
         str(resolved["source_paths"]["policy"]),
     )
 
+
+# What it does:
+#   Loads case study inputs data into project models.
+# Inputs:
+#   Raw files, payloads, or optional data-root arguments.
+# Outputs:
+#   Validated Python objects or dictionaries ready for simulation/API use.
 
 def load_case_study_inputs(
     case_study: str,

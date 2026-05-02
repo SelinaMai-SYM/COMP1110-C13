@@ -1,5 +1,12 @@
 from __future__ import annotations
 
+# What it does:
+#   Runs the restaurant queue discrete-event simulation.
+# Inputs:
+#   A ScenarioDefinition containing restaurant layout, policies, and arrivals.
+# Outputs:
+#   ScenarioResult metrics, logs, queue snapshots, table segments, and group outcomes.
+
 import heapq
 import math
 from itertools import count
@@ -33,6 +40,13 @@ EVENT_PRIORITIES: dict[EventType, int] = {
 }
 
 
+# What it does:
+#   Maintains runtime state and processes scheduled restaurant events.
+# Inputs:
+#   A complete ScenarioDefinition for one simulation run.
+# Outputs:
+#   A simulator instance whose run method produces a ScenarioResult.
+
 class RestaurantSimulator:
     def __init__(self, scenario: ScenarioDefinition):
         self.scenario = scenario
@@ -55,6 +69,13 @@ class RestaurantSimulator:
         self._scheduled_seating_minutes: set[int] = set()
         self._max_queue_length = 0
         self._initialise_runtime_state()
+
+    # What it does:
+    #   Executes events in chronological priority order until the simulation queue is empty.
+    # Inputs:
+    #   The simulator state initialised from the scenario.
+    # Outputs:
+    #   A ScenarioResult with metrics, logs, queue snapshots, table segments, and outcomes.
 
     def run(self) -> ScenarioResult:
         self._record_queue_snapshot(self.config.simulation_start)
@@ -101,6 +122,13 @@ class RestaurantSimulator:
             source_paths=self.scenario.source_paths,
         )
 
+    # What it does:
+    #   Creates group/table state and schedules initial arrival and no-show events.
+    # Inputs:
+    #   Scenario arrivals, tables, and service policy values.
+    # Outputs:
+    #   Mutates simulator queues, event heap, and table history state.
+
     def _initialise_runtime_state(self) -> None:
         for arrival in self.scenario.arrivals:
             queue_id = self._queue_id_for_group(arrival)
@@ -133,6 +161,13 @@ class RestaurantSimulator:
                     payload={"group_id": arrival.group_id},
                 )
 
+    # What it does:
+    #   Adds one event to the priority queue with a stable tie-breaker.
+    # Inputs:
+    #   Target minute, event type, and event payload.
+    # Outputs:
+    #   Updates the simulator event heap.
+
     def _schedule(self, *, minute: int, event_type: EventType, payload: dict[str, object]) -> None:
         heapq.heappush(
             self._events,
@@ -145,6 +180,13 @@ class RestaurantSimulator:
             ),
         )
 
+    # What it does:
+    #   Schedules cleaning or seating dispatch once per minute.
+    # Inputs:
+    #   The dispatch event type and target minute.
+    # Outputs:
+    #   Updates dispatch guard sets and the event heap.
+
     def _schedule_dispatch(self, event_type: EventType, minute: int) -> None:
         registry = (
             self._scheduled_cleaning_minutes
@@ -155,6 +197,13 @@ class RestaurantSimulator:
             return
         registry.add(minute)
         self._schedule(minute=minute, event_type=event_type, payload={})
+
+    # What it does:
+    #   Routes one scheduled event to its specialised handler.
+    # Inputs:
+    #   A ScheduledEvent from the event heap.
+    # Outputs:
+    #   Mutates runtime state according to event type.
 
     def _handle_event(self, event: ScheduledEvent) -> None:
         if event.event_type == EventType.ARRIVAL:
@@ -173,6 +222,13 @@ class RestaurantSimulator:
             self._scheduled_cleaning_minutes.discard(event.minute)
         elif event.event_type == EventType.SEATING_DISPATCH:
             self._scheduled_seating_minutes.discard(event.minute)
+
+    # What it does:
+    #   Places an arriving party into the correct queue and logs it.
+    # Inputs:
+    #   The arrival minute and group id.
+    # Outputs:
+    #   Updates group status, queues, wait tracking, and event log.
 
     def _handle_arrival(self, minute: int, group_id: str) -> None:
         group = self._groups[group_id]
@@ -200,6 +256,13 @@ class RestaurantSimulator:
                 payload={"group_id": group_id},
             )
 
+    # What it does:
+    #   Releases reservation protection when a booked party is marked as no-show.
+    # Inputs:
+    #   The release minute and reservation group id.
+    # Outputs:
+    #   Updates group status and logs the no-show outcome.
+
     def _handle_no_show_release(self, minute: int, group_id: str) -> None:
         group = self._groups[group_id]
         if group.status != "pending_arrival" or not group.spec.no_show_flag:
@@ -212,6 +275,13 @@ class RestaurantSimulator:
             f"Reservation {group_id} was recorded as a no-show.",
             group_id=group_id,
         )
+
+    # What it does:
+    #   Moves a finished table into cleaning or ready state.
+    # Inputs:
+    #   Completion minute, group id, and table id.
+    # Outputs:
+    #   Updates group/table state, table segments, and event log.
 
     def _handle_dining_complete(self, minute: int, group_id: str, table_id: str) -> None:
         group = self._groups[group_id]
@@ -252,6 +322,13 @@ class RestaurantSimulator:
                 table_id=table_id,
             )
 
+    # What it does:
+    #   Marks a table as available after reset or cleaning.
+    # Inputs:
+    #   Ready minute and table id.
+    # Outputs:
+    #   Updates table status and table segment history.
+
     def _handle_table_ready(self, minute: int, table_id: str) -> None:
         table = self._tables[table_id]
         table.status = "available"
@@ -262,6 +339,13 @@ class RestaurantSimulator:
             f"Table {table_id} is clean and available.",
             table_id=table_id,
         )
+
+    # What it does:
+    #   Removes an overdue waiting party when abandonment is enabled.
+    # Inputs:
+    #   Check minute and group id.
+    # Outputs:
+    #   Updates queue membership, group outcome state, and event log.
 
     def _handle_abandonment(self, minute: int, group_id: str) -> None:
         if not self.policy.service_policy.abandonment_enabled:
@@ -283,6 +367,13 @@ class RestaurantSimulator:
             queue_id=group.queue_id,
             details={"waited": waited},
         )
+
+    # What it does:
+    #   Starts cleaning dirty tables subject to the cleaning action limit.
+    # Inputs:
+    #   The dispatch minute and dirty table list.
+    # Outputs:
+    #   Updates table status, table segments, and schedules table-ready events.
 
     def _start_cleaning(self, minute: int) -> None:
         actions = 0
@@ -321,6 +412,13 @@ class RestaurantSimulator:
                 details={"reset_minutes": reset_minutes},
             )
 
+    # What it does:
+    #   Seats as many compatible waiting parties as the policy allows at one minute.
+    # Inputs:
+    #   The current minute and live queue/table state.
+    # Outputs:
+    #   Updates queues, group/table state, logs, and scheduled dining completions.
+
     def _seat_groups(self, minute: int) -> int:
         actions = 0
         limit = self.policy.service_policy.max_seating_actions_per_event_time
@@ -357,6 +455,13 @@ class RestaurantSimulator:
                 },
             )
         return actions
+
+    # What it does:
+    #   Finds the next compatible waiting group and available table.
+    # Inputs:
+    #   Current minute, queue order, reservation policy, and available tables.
+    # Outputs:
+    #   A group/table pair or None when no seating action is possible.
 
     def _pick_next_assignment(self, minute: int) -> tuple[GroupState, TableState] | None:
         available_tables = sorted(
@@ -429,6 +534,13 @@ class RestaurantSimulator:
         candidate_tables.sort(key=lambda table: (table.spec.capacity, table.spec.table_id))
         return group, candidate_tables[0]
 
+    # What it does:
+    #   Determines which available tables are protected for imminent reservations.
+    # Inputs:
+    #   Current minute and currently available tables.
+    # Outputs:
+    #   A set of table ids that should not be used for walk-ins yet.
+
     def _held_table_ids(self, minute: int, available_tables: list[TableState]) -> set[str]:
         if not self.config.reservation_hold_policy.enabled:
             return set()
@@ -464,6 +576,13 @@ class RestaurantSimulator:
                     break
         return held
 
+    # What it does:
+    #   Checks whether a reservation should outrank ordinary queue order.
+    # Inputs:
+    #   A group state and the current minute.
+    # Outputs:
+    #   True when reservation priority should apply.
+
     def _reservation_priority_applies(self, group: GroupState, minute: int) -> bool:
         if not self.policy.seating_policy.reservation_priority:
             return False
@@ -475,6 +594,13 @@ class RestaurantSimulator:
             return False
         grace_end = group.spec.reservation_minute + group.spec.grace_period
         return minute <= grace_end
+
+    # What it does:
+    #   Chooses the queue definition that can hold an arriving party.
+    # Inputs:
+    #   An arrival group and configured queue rules.
+    # Outputs:
+    #   The matching queue id or a validation error.
 
     def _queue_id_for_group(self, arrival: ArrivalGroup) -> str:
         matches = [
@@ -488,6 +614,13 @@ class RestaurantSimulator:
             )
         return matches[0]
 
+    # What it does:
+    #   Computes how long a reservation table should remain protected.
+    # Inputs:
+    #   An arrival group and reservation hold policy.
+    # Outputs:
+    #   The hold duration in minutes.
+
     def _hold_window(self, arrival: ArrivalGroup) -> int:
         if arrival.reservation_minute is None:
             return 0
@@ -495,15 +628,36 @@ class RestaurantSimulator:
             return min(arrival.grace_period, self.config.reservation_hold_policy.hold_minutes)
         return arrival.grace_period
 
+    # What it does:
+    #   Deletes a group id from a queue if it is still present.
+    # Inputs:
+    #   A queue id and group id.
+    # Outputs:
+    #   Mutates queue membership only.
+
     def _remove_from_queue(self, queue_id: str, group_id: str) -> None:
         queue = self._queues[queue_id]
         if group_id in queue:
             queue.remove(group_id)
         self._update_max_queue_length()
 
+    # What it does:
+    #   Refreshes the peak waiting count across all queues.
+    # Inputs:
+    #   Current queue contents.
+    # Outputs:
+    #   Updates the simulator maximum queue length counter.
+
     def _update_max_queue_length(self) -> None:
         total_waiting = sum(len(queue) for queue in self._queues.values())
         self._max_queue_length = max(self._max_queue_length, total_waiting)
+
+    # What it does:
+    #   Captures queue lengths for reporting at one simulation minute.
+    # Inputs:
+    #   The minute being recorded and current queues.
+    # Outputs:
+    #   Appends a QueueSnapshot to the result history.
 
     def _record_queue_snapshot(self, minute: int) -> None:
         snapshot = QueueSnapshot(
@@ -517,6 +671,13 @@ class RestaurantSimulator:
         else:
             self._queue_snapshots.append(snapshot)
         self._max_queue_length = max(self._max_queue_length, snapshot.total_waiting)
+
+    # What it does:
+    #   Records a human-readable simulation event.
+    # Inputs:
+    #   Minute, event type, message, ids, and optional detail payload.
+    # Outputs:
+    #   Appends an EventLogEntry.
 
     def _log(
         self,
@@ -540,6 +701,13 @@ class RestaurantSimulator:
                 details=details,
             )
         )
+
+    # What it does:
+    #   Converts final group states into serializable outcome rows.
+    # Inputs:
+    #   All group states accumulated during the run.
+    # Outputs:
+    #   A list of GroupOutcome records sorted by arrival order.
 
     def _build_group_outcomes(self) -> list[GroupOutcome]:
         ordered_groups = sorted(
@@ -589,6 +757,13 @@ class RestaurantSimulator:
                 )
             )
         return outcomes
+
+    # What it does:
+    #   Calculates summary KPIs from the completed simulation state.
+    # Inputs:
+    #   Group outcomes, queue snapshots, table segments, and policy metadata.
+    # Outputs:
+    #   A MetricsRecord for the scenario.
 
     def _build_metrics(self) -> MetricsRecord:
         completed_groups = [

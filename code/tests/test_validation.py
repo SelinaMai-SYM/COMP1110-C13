@@ -1,5 +1,12 @@
 from __future__ import annotations
 
+# What it does:
+#   Checks validation failures for malformed custom scenario inputs.
+# Inputs:
+#   Minimal valid config/policy data plus intentionally invalid arrivals.
+# Outputs:
+#   Assertions that invalid inputs raise ValueError.
+
 import json
 import unittest
 
@@ -46,6 +53,13 @@ MINIMAL_POLICY = json.dumps(
     }
 )
 
+
+# What it does:
+#   Groups tests for rejecting invalid scenario inputs.
+# Inputs:
+#   JSON/CSV payload strings.
+# Outputs:
+#   Test assertions that validation errors are raised.
 
 class ValidationTests(unittest.TestCase):
     def test_reservation_without_reservation_time_is_rejected(self) -> None:

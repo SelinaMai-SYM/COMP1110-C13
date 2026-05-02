@@ -8,8 +8,8 @@
 - build a custom scenario using guided preset selections instead of editing raw JSON and CSV in the main workflow
 - hide incompatible arrival presets automatically when a smaller dining-room layout cannot seat the largest party in that demand file
 - preview the generated config, policy, and arrivals data in an optional advanced section
-- inspect metrics, queue timeline, event log, group outcomes, and table activity
-- read the backend schema reference documents exposed by the API
+- inspect aggregate metrics, charts, and A/B comparison tables in the main dashboard
+- rely on the backend API and notebook workflow for deeper traces such as event logs, queue snapshots, group outcomes, table activity, and schema reference documents
 
 ## Local development
 

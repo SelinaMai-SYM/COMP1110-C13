@@ -1,1 +1,10 @@
+/*
+- What it does:
+  Loads the dashboard stylesheet into the Vite entry bundle.
+- Inputs:
+  The local dashboard.css file.
+- Outputs:
+  Global styles applied to the React application.
+*/
+
 @import './dashboard.css';
